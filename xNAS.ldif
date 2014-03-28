@@ -1,0 +1,463 @@
+#	= ^ . ^ =
+version: 1
+
+dn: dc=xnas,dc=local
+objectClass: organization
+objectClass: dcObject
+objectClass: top
+dc: xnas
+o: xNAS
+
+dn: cn=admin,dc=xnas,dc=local
+objectClass: top
+objectClass: organizationalRole
+objectClass: simpleSecurityObject
+cn: admin
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+description: LDAP administrator
+
+dn: ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: organizationalUnit
+ou: groups
+
+dn: ou=unix,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: organizationalUnit
+ou: unix
+
+dn: cn=p1,ou=unix,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: posixGroup
+cn: p1
+gidNumber: 20001
+memberUid: p1
+
+dn: cn=p2,ou=unix,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: posixGroup
+cn: p2
+gidNumber: 20002
+memberUid: p2
+
+dn: cn=p3,ou=unix,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: posixGroup
+cn: p3
+gidNumber: 20003
+memberUid: p3
+
+dn: cn=support,ou=unix,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: posixGroup
+cn: support
+gidNumber: 10000
+
+dn: ou=webdav,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: organizationalUnit
+ou: webdav
+
+dn: cn=p1-m1,ou=webdav,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: groupOfNames
+cn: p1-m1
+member: cn=m1,ou=materias,dc=xnas,dc=local
+member: uid=p1,ou=profesores,ou=users,dc=xnas,dc=local
+member: cn=g01,ou=grupos,ou=users,dc=xnas,dc=local
+member: cn=g11,ou=grupos,ou=users,dc=xnas,dc=local
+
+dn: cn=p2-m1,ou=webdav,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: groupOfNames
+cn: p2-m1
+member: cn=m1,ou=materias,dc=xnas,dc=local
+member: uid=p2,ou=profesores,ou=users,dc=xnas,dc=local
+member: cn=g02,ou=grupos,ou=users,dc=xnas,dc=local
+member: cn=g12,ou=grupos,ou=users,dc=xnas,dc=local
+
+dn: cn=p3-m1,ou=webdav,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: groupOfNames
+cn: p3-m1
+member: cn=m1,ou=materias,dc=xnas,dc=local
+member: uid=p3,ou=profesores,ou=users,dc=xnas,dc=local
+member: cn=g03,ou=grupos,ou=users,dc=xnas,dc=local
+member: cn=g13,ou=grupos,ou=users,dc=xnas,dc=local
+
+dn: cn=p1-m2,ou=webdav,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: groupOfNames
+cn: p1-m2
+member: uid=p1,ou=profesores,ou=users,dc=xnas,dc=local
+member: cn=m2,ou=materias,dc=xnas,dc=local
+member: cn=g04,ou=grupos,ou=users,dc=xnas,dc=local
+member: cn=g14,ou=grupos,ou=users,dc=xnas,dc=local
+
+dn: cn=p2-m2,ou=webdav,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: groupOfNames
+cn: p2-m2
+member: cn=m2,ou=materias,dc=xnas,dc=local
+member: uid=p2,ou=profesores,ou=users,dc=xnas,dc=local
+member: cn=g05,ou=grupos,ou=users,dc=xnas,dc=local
+member: cn=g15,ou=grupos,ou=users,dc=xnas,dc=local
+
+dn: cn=p3-m2,ou=webdav,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: groupOfNames
+cn: p3-m2
+member: cn=m2,ou=materias,dc=xnas,dc=local
+member: uid=p3,ou=profesores,ou=users,dc=xnas,dc=local
+member: cn=g06,ou=grupos,ou=users,dc=xnas,dc=local
+member: cn=g16,ou=grupos,ou=users,dc=xnas,dc=local
+
+dn: cn=p1-m3,ou=webdav,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: groupOfNames
+cn: p1-m3
+member: uid=p1,ou=profesores,ou=users,dc=xnas,dc=local
+member: cn=m3,ou=materias,dc=xnas,dc=local
+member: cn=g07,ou=grupos,ou=users,dc=xnas,dc=local
+member: cn=g17,ou=grupos,ou=users,dc=xnas,dc=local
+
+dn: cn=p2-m3,ou=webdav,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: groupOfNames
+cn: p2-m3
+member: cn=m3,ou=materias,dc=xnas,dc=local
+member: uid=p2,ou=profesores,ou=users,dc=xnas,dc=local
+member: cn=g08,ou=grupos,ou=users,dc=xnas,dc=local
+member: cn=g18,ou=grupos,ou=users,dc=xnas,dc=local
+
+dn: cn=p3-m3,ou=webdav,ou=groups,dc=xnas,dc=local
+objectClass: top
+objectClass: groupOfNames
+cn: p3-m3
+member: cn=m3,ou=materias,dc=xnas,dc=local
+member: uid=p3,ou=profesores,ou=users,dc=xnas,dc=local
+member: cn=g09,ou=grupos,ou=users,dc=xnas,dc=local
+member: cn=g19,ou=grupos,ou=users,dc=xnas,dc=local
+
+dn: ou=materias,dc=xnas,dc=local
+objectClass: top
+objectClass: organizationalUnit
+ou: materias
+
+dn: cn=m1,ou=materias,dc=xnas,dc=local
+objectClass: top
+objectClass: organizationalRole
+cn: m1
+
+dn: cn=m2,ou=materias,dc=xnas,dc=local
+objectClass: top
+objectClass: organizationalRole
+cn: m2
+
+dn: cn=m3,ou=materias,dc=xnas,dc=local
+objectClass: top
+objectClass: organizationalRole
+cn: m3
+
+dn: ou=services,dc=xnas,dc=local
+objectClass: top
+objectClass: organizationalUnit
+ou: services
+
+dn: cn=apache2,ou=services,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: apache2
+userPassword:: e1NTSEF9OHprMyt3ZzFZWWlqMEZ0cW42VHpXUytPNFVueUVveTFKaWJmMlE9P
+ Q==
+
+dn: cn=debian,ou=services,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: debian
+userPassword:: e1NTSEF9ZkQ5d01saEYzclMvczNkZ0g4VTZBL1p0M01DcVFEd1hpUUNjYmc9P
+ Q==
+
+dn: ou=users,dc=xnas,dc=local
+objectClass: top
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: top
+objectClass: organizationalUnit
+ou: grupos
+
+dn: cn=g01,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g01
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g02,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g02
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g03,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g03
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g04,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g04
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g05,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g05
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g06,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g06
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g07,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g07
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g08,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g08
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g09,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g09
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g10,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g10
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g11,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g11
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g12,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g12
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g13,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g13
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g14,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g14
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g15,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g15
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g16,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g16
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g17,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g17
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g18,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g18
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: cn=g19,ou=grupos,ou=users,dc=xnas,dc=local
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+cn: g19
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: ou=profesores,ou=users,dc=xnas,dc=local
+objectClass: top
+objectClass: organizationalUnit
+ou: profesores
+
+dn: uid=p1,ou=profesores,ou=users,dc=xnas,dc=local
+objectClass: shadowAccount
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: top
+objectClass: posixAccount
+cn: p1
+gidNumber: 20001
+homeDirectory: /opt/xNAS/files/profesor/p1
+sn: p1
+uid: p1
+uidNumber: 20001
+employeeType: p
+loginShell: /usr/sbin/nologin
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: uid=p2,ou=profesores,ou=users,dc=xnas,dc=local
+objectClass: shadowAccount
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: top
+objectClass: posixAccount
+cn: p2
+gidNumber: 20002
+homeDirectory: /opt/xNAS/files/profesor/p2
+sn: p2
+uid: p2
+uidNumber: 20002
+employeeType: p
+loginShell: /usr/sbin/nologin
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: uid=p3,ou=profesores,ou=users,dc=xnas,dc=local
+objectClass: shadowAccount
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: top
+objectClass: posixAccount
+cn: p3
+gidNumber: 20003
+homeDirectory: /opt/xNAS/files/profesor/p3
+sn: p3
+uid: p3
+uidNumber: 20003
+employeeType: p
+loginShell: /usr/sbin/nologin
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: ou=staff,ou=users,dc=xnas,dc=local
+objectClass: top
+objectClass: organizationalUnit
+ou: staff
+
+dn: uid=s1,ou=staff,ou=users,dc=xnas,dc=local
+objectClass: shadowAccount
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: top
+objectClass: posixAccount
+cn: s1
+gidNumber: 10001
+homeDirectory: /opt/xNAS/files/staff/s1
+sn: s1
+uid: s1
+uidNumber: 10001
+employeeType: s
+loginShell: /bin/bash
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: uid=s2,ou=staff,ou=users,dc=xnas,dc=local
+objectClass: shadowAccount
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: top
+objectClass: posixAccount
+cn: s2
+gidNumber: 10002
+homeDirectory: /opt/xNAS/files/staff/s2
+sn: s2
+uid: s2
+uidNumber: 10002
+employeeType: s
+loginShell: /bin/bash
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
+dn: uid=s3,ou=staff,ou=users,dc=xnas,dc=local
+objectClass: shadowAccount
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: top
+objectClass: posixAccount
+cn: s3
+gidNumber: 10003
+homeDirectory: /opt/xNAS/files/staff/s3
+sn: s3
+uid: s3
+uidNumber: 10003
+employeeType: s
+loginShell: /bin/bash
+userPassword:: e3NzaGF9OWhEQXlvNVRmdnRMQ1ZHTHNoSXQ5ZzRJN3NkdUpkRVBycVRoQWc9P
+ Q==
+
