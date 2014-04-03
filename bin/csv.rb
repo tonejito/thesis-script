@@ -2,27 +2,34 @@
 
 require 'csv'
 
-@materias = {}
+materias = []
+i=0
 
 CSV.foreach("../materias.csv") do |row|
   id_materia, materia = row
   next if id_materia == "CLAVE"
-  @materias[id_materia] = materia.split(" ").map {|word| word.capitalize}.join(" ")
+  materia = materia.split(" ").map {|word| word.capitalize}.join(" ")
+  materias[i] = [ id_materia , materia ]
+  i+=1
 end
 
-@materias.each do |key, value| 
-  puts key + " - " + value 
+materias.each do |value|
+  puts value.inspect
 end
 
-@profesores = {}
+
+profesores = []
+i=0
 
 CSV.foreach("../profesores.csv") do |row|
   id_prof, num_trab, curp, RFC, nombre = row
   next if id_prof == "id_prof"
-  @profesores[id_prof] = nombre.split(" ").map {|word| word.capitalize}.join(" ")
+  nombre = nombre.split(" ").map {|word| word.capitalize}.join(" ")
+  profesores[i] = [id_prof, num_trab, curp, RFC, nombre]
+  i+=1
 end
 
-@profesores.each do |key, value| 
-  puts key + " : " + value 
+profesores.each do |value|
+  puts value.inspect
 end
 
