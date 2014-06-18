@@ -9,44 +9,91 @@
     float: left;
    }
   </style>
-  <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+  <!--script src="http://code.jquery.com/jquery-1.10.2.js"></script-->
+  <script src="http://code.jquery.com/jquery-1.5.js"></script>
   <script type="text/javascript">
+
+$(document).ready(function (){
+    $("#btn382").click(function(){       
+        /* set no cache */
+        $.ajaxSetup({ cache: false });
+ 
+        $.getJSON("https://xnas.local/car.json",null, function(data,textStatus,jqXHR){
+            var html = [];
+ 
+            /* loop through array */
+            $.each(data, function(index, d){           
+                html.push("Manufacturer : ", d.Manufacturer, ", ",
+                          "Sold : ", d.Sold, ", ",
+                          "Month : ", d.Month, "<br>");
+            });
+ 
+ 
+            $("#div381").html(html.join('')).css("background-color", "orange");
+        }).error(function(jqXHR, textStatus, errorThrown){ /* assign handler */
+            alert(jqXHR.responseText) 
+            //alert("error occurred!");
+        });
+    });
+});
+
+$(document).ready(function(){
+  var json_file  = "https://xnas.local/sample.json";
+    //attach a jQuery live event to the button
+    $('#getdata-button').live('click', function(){
+        $.getJSON(json_file, function(data) {
+            alert(data); //uncomment this for debug
+            //alert (data.item1+" "+data.item2+" "+data.item3); //further debug
+            $('#showdata').html("<pre>\nitem1="+data.item1+"\nitem2="+data.item2+"\nitem3="+data.item3+"</pre>");
+        });
+    });
+});
+
 //	http://api.jquery.com/jQuery.getJSON/
-(
- function()
- {
-  var flickerAPI = "http://api.flickr.com/services/feeds/photos_public.gne?jsoncallback=?";
-  $.getJSON
-  (
-   flickerAPI,
-   {
-    tags: "mount rainier",
-    tagmode: "any",
-    format: "json"
-   }
-  ).done
-  (
-   function(data)
-   {
-    $.each
-    (
-     data.items, function( i, item )
-     {
-      $( "<img>" ).attr( "src", item.media.m ).appendTo( "#images" );
-      if ( i === 3 )
-      {
-       return false;
-      }
-     }
-    );
-   }
-  );
- }
-)();
+//(
+// function()
+// {
+//  var flickerAPI = "http://api.flickr.com/services/feeds/photos_public.gne?jsoncallback=?";
+//  $.getJSON
+//  (
+//   flickerAPI,
+//   {
+//    tags: "mount rainier",
+//    tagmode: "any",
+//    format: "json"
+//   }
+//  ).done
+//  (
+//   function(data)
+//   {
+//    $.each
+//    (
+//     data.items, function( i, item )
+//     {
+//      $( "<img>" ).attr( "src", item.media.m ).appendTo( "#images" );
+//      if ( i === 3 )
+//      {
+//       return false;
+//      }
+//     }
+//    );
+//   }
+//  );
+// }
+//)();
   </script>
  </head>
  <body>
   <div id="images"></div>
+  <a href="#" id="getdata-button">Get JSON Data</a>
+  <div id="showdata"></div>
+<a name="#ajax-getjson-example"></a>
+<div id="example-section38">   
+    <div>Car sale report</div>
+    <div id="div381"></div>
+    <button id="btn382" type="button">Click to load car sale report (json type)</button>   
+    &nbsp;<a href="/car.json" target="_blank">Original car sale report</a>
+</div>
  </body>
 </html>
 

@@ -1,0 +1,25 @@
+[{
+    "Manufacturer": "Toyota",
+    "Sold": 1200,
+    "Month": "2012-11"
+}, {
+    "Manufacturer": "Ford",
+    "Sold": 1100,
+    "Month": "2012-11"
+}, {
+    "Manufacturer": "BMW",
+    "Sold": 900,
+    "Month": "2012-11"
+}, {
+    "Manufacturer": "Benz",
+    "Sold": 600,
+    "Month": "2012-11"
+}, {
+    "Manufacturer": "GMC",
+    "Sold": 500,
+    "Month": "2012-11"
+}, {
+    "Manufacturer": "HUMMER",
+    "Sold": 120,
+    "Month": "2012-11"
+}]
