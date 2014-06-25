@@ -1,99 +1,196 @@
 <html>
+<!--
+	= ^ . ^ =
+-->
  <head>
   <meta charset="utf-8">
   <title>JSON</title>
-  <style>
-   img
-   {
-    height: 100px;
-    float: left;
-   }
-  </style>
-  <!--script src="http://code.jquery.com/jquery-1.10.2.js"></script-->
-  <script src="http://code.jquery.com/jquery-1.5.js"></script>
+  <link rel="stylesheet" href="/jqwidgets/styles/jqx.base.css" type="text/css" />
+  <script type="text/javascript" src="/scripts/jquery-1.10.2.min.js"></script>
+  <script type="text/javascript" src="/scripts/demos.js"></script>
+  <script type="text/javascript" src="/jqwidgets/jqxcore.js"></script>
+  <script type="text/javascript" src="/jqwidgets/jqxdata.js"></script>
+  <script type="text/javascript" src="/jqwidgets/jqxbuttons.js"></script>
+  <script type="text/javascript" src="/jqwidgets/jqxscrollbar.js"></script>
+  <script type="text/javascript" src="/jqwidgets/jqxpanel.js"></script>
+  <script type="text/javascript" src="/jqwidgets/jqxtree.js"></script>
+  <script type="text/javascript" src="/jqwidgets/jqxexpander.js"></script>
   <script type="text/javascript">
-
-$(document).ready(function (){
-    $("#btn382").click(function(){       
-        /* set no cache */
-        $.ajaxSetup({ cache: false });
- 
-        $.getJSON("https://xnas.local/car.json",null, function(data,textStatus,jqXHR){
-            var html = [];
- 
-            /* loop through array */
-            $.each(data, function(index, d){           
-                html.push("Manufacturer : ", d.Manufacturer, ", ",
-                          "Sold : ", d.Sold, ", ",
-                          "Month : ", d.Month, "<br>");
-            });
- 
- 
-            $("#div381").html(html.join('')).css("background-color", "orange");
-        }).error(function(jqXHR, textStatus, errorThrown){ /* assign handler */
-            alert(jqXHR.responseText) 
-            //alert("error occurred!");
-        });
-    });
-});
-
-$(document).ready(function(){
-  var json_file  = "https://xnas.local/sample.json";
-    //attach a jQuery live event to the button
-    $('#getdata-button').live('click', function(){
-        $.getJSON(json_file, function(data) {
-            alert(data); //uncomment this for debug
-            //alert (data.item1+" "+data.item2+" "+data.item3); //further debug
-            $('#showdata').html("<pre>\nitem1="+data.item1+"\nitem2="+data.item2+"\nitem3="+data.item3+"</pre>");
-        });
-    });
-});
+(
+ function()
+ {
+  $("html").append('\n<!--\n\t= ^ . ^ =\t\n-->\n');
+ }
+)();
 
 //	http://api.jquery.com/jQuery.getJSON/
-//(
-// function()
-// {
-//  var flickerAPI = "http://api.flickr.com/services/feeds/photos_public.gne?jsoncallback=?";
-//  $.getJSON
-//  (
-//   flickerAPI,
-//   {
-//    tags: "mount rainier",
-//    tagmode: "any",
-//    format: "json"
-//   }
-//  ).done
-//  (
-//   function(data)
-//   {
-//    $.each
-//    (
-//     data.items, function( i, item )
-//     {
-//      $( "<img>" ).attr( "src", item.media.m ).appendTo( "#images" );
-//      if ( i === 3 )
-//      {
-//       return false;
-//      }
-//     }
-//    );
-//   }
-//  );
-// }
-//)();
+(
+ function()
+ {
+  // Receive JSON payload
+  var target = "/data.json";
+  // Iterate on each parsed JSON element
+  $.getJSON(target).done
+  (
+   function(data)
+   {
+    // Format JSON data
+    var source =
+    {
+     datatype: "json",
+     id:       'id',
+     localdata: data,
+     datafields:
+     [
+      { name:  'id'     },
+      { name:  'parent' },
+      { name:  'name'   },
+     ]
+    };
+    // Prepare datasource to receive JSON parsed data
+    var dataAdapter = new $.jqx.dataAdapter(source);
+    dataAdapter.dataBind();
+    var records = dataAdapter.getRecordsHierarchy
+    (
+     'id',
+     'parent',
+     'items',
+     [
+      {
+       name: 'name',
+       map:  'label'
+      }
+     ]
+    );
+    // Set widget display and control options
+    $('#jqxExpander').jqxExpander
+    (
+     {
+      showArrow:  false,
+      toggleMode: 'none',
+      width:      '50%',
+      height:     '94%',
+      expanded:   true
+     }
+    );
+    $('#jqxTree').jqxTree
+    (
+     {
+      source:             records,
+      incrementalSearch:  false,
+      keyboardNavigation: false,
+      toggleMode:         'dblclick',
+      width:              '99%',
+      height:             '94%',
+      theme:              'energyblue'
+     }
+    );
+
+    // Prepare and display widgets
+    $('#jqxExpander').jqxExpander('expand');
+    $('#jqxTree').jqxTree('render');
+    $('#jqxTree').jqxTree('expandAll');
+    $('#jqxTree').jqxTree('selectItem',null);
+    $('#jqxTree').jqxTree('focus');
+
+    // Display a confirm dialog when the item is selected
+    // if the confirmation dialog is accepted, send the user to the destination folder
+    $('#jqxTree').on
+    (
+     'select',
+     function (event)
+     {
+      var args = event.args;
+      var item = $('#jqxTree').jqxTree('getItem', args.element);
+      var label = item.label;
+      var id = item.id;
+      var path = "/"+id;
+      // Print entire URL in the browser confirm dialog
+      if(confirm(document.location.href.replace(window.location.pathname,path)))
+       document.location.href = path;
+     }
+    );
+   }
+  );
+ }
+)();
+
+/*
+(
+ function()
+ {
+  // Build items
+  $("body").append
+  ('
+   <div id="links">
+    <select id="type"></select>
+    <select id="profesor"></select>
+    <select id="subject"></select>
+    <select id="year"></select>
+    <select id="group"></select>
+   </div>
+  ');
+  // Receive JSON payload
+  var target = "/data.json";
+  // Iterate on each parsed JSON element
+  $.getJSON(target).done
+  (
+   function(data)
+   {
+    var items = [];
+    $.each
+    (
+     data, function( k, p )
+     {
+      //items.push("<pre>"+key+"=>"+val+"</pre>"+"<hr/>");
+      $('#type').append('<option id="' + p + '">' + k + '</option>');
+      $.each
+      (
+       p, function(p1,m)
+       {
+        $('#profesor').append('<option id="' + m + '">' + p1 + '</option>');
+        $.each
+        (
+         m, function(m1,y)
+         {
+          $('#subject').append('<option id="' + y + '">' + m1 + '</option>');
+          $.each
+          (
+           y, function(y1,g)
+           {
+            y1 = y1.substring(1);
+            $('#year').append('<option id="' + g + '">' + y1 + '</option>');
+            $.each
+            (
+             g, function(g1,grp)
+             {
+              $('#group').append('<option id="' + grp + '">' + grp + '</option>');
+              var path = "/"+k+"/"+p1+"/"+m1+"/"+y1+"/"+grp+"/";
+              items.push("<a href='"+path+"'>"+path+"</a>"+"<br/>\n");
+             }
+            )
+           }
+          )
+         }
+        )
+       }
+      )
+     }
+    );
+    $('#links').html(items.join(""));
+   }
+  );
+ }
+)();
+*/
   </script>
  </head>
  <body>
-  <div id="images"></div>
-  <a href="#" id="getdata-button">Get JSON Data</a>
-  <div id="showdata"></div>
-<a name="#ajax-getjson-example"></a>
-<div id="example-section38">   
-    <div>Car sale report</div>
-    <div id="div381"></div>
-    <button id="btn382" type="button">Click to load car sale report (json type)</button>   
-    &nbsp;<a href="/car.json" target="_blank">Original car sale report</a>
-</div>
+   <div id='jqxExpander'>
+    <div id='Header'></div>
+    <div id='jqxTree'>
+    </div>
+   </div>
  </body>
 </html>
 
