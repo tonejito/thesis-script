@@ -1,11 +1,36 @@
+<!DOCTYPE html>
 <html>
 <!--
 	= ^ . ^ =
 -->
  <head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta charset="utf-8">
   <title>JSON</title>
-  <link rel="stylesheet" href="/jqwidgets/styles/jqx.base.css" type="text/css" />
+  <style type="text/css">
+    body, html
+    {
+      margin:  0px;
+      border:  0px;
+      padding: 0px;
+      height: 99.9%;
+    }
+    .container
+    {
+      width:  100%;
+      height: inherit;
+    }
+    .content
+    {
+      width:         80%;
+      height:       inherit;
+      padding:       0px;
+      margin:        0px;
+      margin-left:  auto;
+      margin-right: auto;
+    }
+  </style>
+  <link type="text/css" rel="stylesheet" href="/jqwidgets/styles/jqx.base.css" />
   <script type="text/javascript" src="/scripts/jquery-1.10.2.min.js"></script>
   <script type="text/javascript" src="/scripts/demos.js"></script>
   <script type="text/javascript" src="/jqwidgets/jqxcore.js"></script>
@@ -15,6 +40,11 @@
   <script type="text/javascript" src="/jqwidgets/jqxpanel.js"></script>
   <script type="text/javascript" src="/jqwidgets/jqxtree.js"></script>
   <script type="text/javascript" src="/jqwidgets/jqxexpander.js"></script>
+  <script type="text/javascript" src="/jqwidgets/jqxlistbox.js"></script>
+  <script type="text/javascript" src="/jqwidgets/jqxlistmenu.js"></script>
+  <script type="text/javascript" src="/jqwidgets/jqxtabs.js"></script>
+  <script type="text/javascript" src="/jqwidgets/jqxdockpanel.js"></script>
+  <script type="text/javascript" src="/jqwidgets/jqxtooltip.js"></script>
   <script type="text/javascript">
 (
  function()
@@ -22,11 +52,116 @@
   $("html").append('\n<!--\n\t= ^ . ^ =\t\n-->\n');
  }
 )();
-
+/**/
 //	http://api.jquery.com/jQuery.getJSON/
+//	http://www.jqwidgets.com/jquery-widgets-demo/demos/jqxlistmenu/index.htm#demos/jqxlistmenu/nestedlistviews.htm
+
+$(document).ready
 (
- function()
+ function ()
  {
+  // Show Render mode information
+  $("body").jqxTooltip
+  (
+   {
+    content:    document.compatMode + '<br/>' + navigator.userAgent,
+    position:  'bottom',
+    showArrow:  true
+   }
+  );
+  // Create jqxTabs
+  $('#jqxTabs').jqxTabs
+  (
+   {
+    width:            'auto',
+    height:           'inherit',
+    position:         'top',
+    animationType:    'fade',
+    selectionTracker:  true
+   }
+  );
+
+  // Receive JSON payload
+  var target = "/data.json.0";
+  var items = [];
+
+  /***
+  * NOTE: This code is rather ugly and might seem easy to convert it to
+  * a recursive fashion. I tried for 6 hours to find a way to make it
+  * recursive and I couldn't find a solution.
+  *	T - T
+  ***/
+  // Iterate on each parsed JSON element
+  $.getJSON(target).done
+  (
+   function(data)
+   {
+    items.push('<ul id="jqxListMenu" data-role="listmenu">' + '\n');
+    $.each
+    (
+     data,
+     function(k,p)
+     {
+      items.push('<li>' + k + '<ul data-role="listmenu">');
+      $.each
+      (
+       p,
+       function(p1,m)
+       {
+        items.push('<li>' + p1 + '<ul data-role="listmenu">');
+        $.each
+        (
+         m,
+         function(m1,y)
+         {
+          items.push('<li>' + m1 + '<ul data-role="listmenu">');
+          $.each
+          (
+           y,
+           function(y1,g)
+           {
+            items.push('<li>' + y1 + '<ul data-role="listmenu">');
+            $.each
+            (
+             g,
+             function(g1,grp)
+             {
+              var path = "/"+k+"/"+p1+"/"+m1+"/"+y1+"/"+grp+"/";
+              items.push('<li>' + '<a href="'+path+'">'+grp+'</a>' + '</li>');
+             }
+            )
+            items.push('</ul>' + '</li>');
+           }
+          )
+          items.push('</ul>' + '</li>');
+         }
+        )
+        items.push('</ul>' + '</li>');
+       }
+      )
+      items.push('</ul>' + '</li>');
+     }
+    );
+    items.push('</ul>');
+    // Replace contents of #links with the HTML generated here
+    $('#links').html(items.join(""));
+    // Create jqxListMenu
+    $('#jqxListMenu').jqxListMenu
+    (
+     {
+      width:                'auto',
+      height:                '99%',
+      enableScrolling:       true,
+      showHeader:            true,
+      showBackButton:        true,
+      showFilter:            true,
+      showNavigationArrows:  true,
+      autoSeparators:        true
+     }
+    );
+   } // function(data)
+  ); // getJSON
+/**/
   // Receive JSON payload
   var target = "/data.json";
   // Iterate on each parsed JSON element
@@ -62,27 +197,27 @@
       }
      ]
     );
-    // Set widget display and control options
+    // Create jqxExpander
     $('#jqxExpander').jqxExpander
     (
      {
-      showArrow:  false,
       toggleMode: 'none',
-      width:      '50%',
-      height:     '94%',
-      expanded:   true
+      width:      '100%',
+      height:     '100%',
+      showArrow:   false,
+      expanded:    true
      }
     );
+    // Create jqxTree
     $('#jqxTree').jqxTree
     (
      {
-      source:             records,
-      incrementalSearch:  false,
-      keyboardNavigation: false,
+      width:              'auto',
+      height:             '100%',
       toggleMode:         'dblclick',
-      width:              '99%',
-      height:             '94%',
-      theme:              'energyblue'
+      incrementalSearch:   false,
+      keyboardNavigation:  false,
+      source:              records
      }
     );
 
@@ -91,14 +226,13 @@
     $('#jqxTree').jqxTree('render');
     $('#jqxTree').jqxTree('expandAll');
     $('#jqxTree').jqxTree('selectItem',null);
-    $('#jqxTree').jqxTree('focus');
 
     // Display a confirm dialog when the item is selected
     // if the confirmation dialog is accepted, send the user to the destination folder
     $('#jqxTree').on
     (
      'select',
-     function (event)
+     function(event)
      {
       var args = event.args;
       var item = $('#jqxTree').jqxTree('getItem', args.element);
@@ -110,87 +244,35 @@
        document.location.href = path;
      }
     );
-   }
-  );
+   } // function(data)
+  ); // getJSON
+/**/
  }
-)();
-
-/*
-(
- function()
- {
-  // Build items
-  $("body").append
-  ('
-   <div id="links">
-    <select id="type"></select>
-    <select id="profesor"></select>
-    <select id="subject"></select>
-    <select id="year"></select>
-    <select id="group"></select>
-   </div>
-  ');
-  // Receive JSON payload
-  var target = "/data.json";
-  // Iterate on each parsed JSON element
-  $.getJSON(target).done
-  (
-   function(data)
-   {
-    var items = [];
-    $.each
-    (
-     data, function( k, p )
-     {
-      //items.push("<pre>"+key+"=>"+val+"</pre>"+"<hr/>");
-      $('#type').append('<option id="' + p + '">' + k + '</option>');
-      $.each
-      (
-       p, function(p1,m)
-       {
-        $('#profesor').append('<option id="' + m + '">' + p1 + '</option>');
-        $.each
-        (
-         m, function(m1,y)
-         {
-          $('#subject').append('<option id="' + y + '">' + m1 + '</option>');
-          $.each
-          (
-           y, function(y1,g)
-           {
-            y1 = y1.substring(1);
-            $('#year').append('<option id="' + g + '">' + y1 + '</option>');
-            $.each
-            (
-             g, function(g1,grp)
-             {
-              $('#group').append('<option id="' + grp + '">' + grp + '</option>');
-              var path = "/"+k+"/"+p1+"/"+m1+"/"+y1+"/"+grp+"/";
-              items.push("<a href='"+path+"'>"+path+"</a>"+"<br/>\n");
-             }
-            )
-           }
-          )
-         }
-        )
-       }
-      )
-     }
-    );
-    $('#links').html(items.join(""));
-   }
-  );
- }
-)();
-*/
+)
   </script>
  </head>
  <body>
-   <div id='jqxExpander'>
-    <div id='Header'></div>
-    <div id='jqxTree'>
-    </div>
+   <div class="container">
+     <div class="content">
+       <div id='jqxTabs'>
+         <ul id='tabs'>
+           <li style="margin-left: 30px;">jqxListMenu</li>
+           <li>jqxTree</li>
+         </ul>
+         <div class="content">
+           <div id='links' class="container">
+             <ul id='jqxListMenu' data-role="listmenu">
+             </ul>
+           </div>
+         </div>
+         <div class="content">
+           <div id='jqxExpander' class="container">
+             <div id='Header' class="header">damn MSIE</div>
+             <div id='jqxTree'></div>
+           </div>
+         </div>
+       </div>
+     </div>
    </div>
  </body>
 </html>
-
