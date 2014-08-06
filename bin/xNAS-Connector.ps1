@@ -4,6 +4,8 @@
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
 
+$EOT = [char]04;
+
 function setmode()
 {
   $H = get-host
@@ -16,34 +18,54 @@ function setmode()
 
 #setmode
 
-function DisplayBox()
+function DisplayBox($location)
 {
   $title = "Title"
   $text  = "Text"
-  $location = "https://xnas.local/"
-  $ret =  ""
+  # If the user press OK or <Enter> the textbox contents are returned
+  # If the user press Cancel or <Escape> an EOT char (ASCII 0x04) is returned
+  #$location = "https://xnas.local/"
   # http://technet.microsoft.com/en-us/library/ff730941.aspx
   # Creating a Custom Input Box
 
   # Form
   $objForm = New-Object System.Windows.Forms.Form 
   $objForm.Text = $title
-  $objForm.Size = New-Object System.Drawing.Size(300,200) 
+  $objForm.Size = New-Object System.Drawing.Size(320,240)
+  $objForm.MinimumSize = $objForm.Size
+  $objForm.MaximumSize = $objForm.Size
   $objForm.StartPosition = "CenterScreen"
+# Customize Form attributes
+  # http://msdn.microsoft.com/en-us/library/System.Windows.Forms.Form%28v=vs.110%29.aspx
+  # http://social.technet.microsoft.com/Forums/windowsserver/en-US/16444c7a-ad61-44a7-8c6f-b8d619381a27/using-icons-in-powershell-scripts?forum=winserverpowershell
+  # http://msdn.microsoft.com/en-us/library/system.drawing.systemicons%28v=vs.110%29.aspx
+  $objForm.Icon = [System.Drawing.SystemIcons]::WinLogo #Application
+  $objForm.ShowIcon = $true
+  $objForm.Topmost = $false
+  $objForm.AllowDrop = $false
+  $objForm.AllowTransparency = $false
+  $objForm.Opacity = 1
+  $objForm.AutoSize = $true
+  $objForm.AutoSizeMode = [System.Windows.Forms.AutoSizeMode]::GrowOnly
+  $objForm.MaximizeBox = $false
+  $objForm.MinimizeBox = $false
+  $objForm.HelpButton = $false
+  $objForm.ShowInTaskbar = $true
+  $objForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedSingle
 
   # Key handlers
   $objForm.KeyPreview = $True
   $objForm.Add_KeyDown({if ($_.KeyCode -eq "Enter") 
-    {$ret=$objTextBoxLocation.Text;$objForm.Close()}})
+    {$location=$objTextBoxLocation.Text;$objForm.Close()}})
   $objForm.Add_KeyDown({if ($_.KeyCode -eq "Escape") 
-    {$objForm.Close()}})
+    {$location=$EOT;$objForm.Close()}})
 
   # OK
   $OKButton = New-Object System.Windows.Forms.Button
   $OKButton.Location = New-Object System.Drawing.Size(75,120)
   $OKButton.Size = New-Object System.Drawing.Size(75,23)
   $OKButton.Text = "OK"
-  $OKButton.Add_Click({$ret = $objTextBoxLocation.Text;$objForm.Close()})
+  $OKButton.Add_Click({$location = $objTextBoxLocation.Text;$objForm.Close()})
   $objForm.Controls.Add($OKButton)
 
   # Cancel
@@ -51,7 +73,7 @@ function DisplayBox()
   $CancelButton.Location = New-Object System.Drawing.Size(150,120)
   $CancelButton.Size = New-Object System.Drawing.Size(75,23)
   $CancelButton.Text = "Cancel"
-  $CancelButton.Add_Click({$objForm.Close()})
+  $CancelButton.Add_Click({$location = $EOT; $objForm.Close()})
   $objForm.Controls.Add($CancelButton)
 
   # Text
@@ -67,7 +89,11 @@ function DisplayBox()
   $objTextBoxLocation.Location = New-Object System.Drawing.Size(10,40) 
   $objTextBoxLocation.Size = New-Object System.Drawing.Size(260,20) 
   $objForm.Controls.Add($objTextBoxLocation)
-  
+
+  # Key handlers
+  $objForm.AcceptButton = $OKButton
+  $objForm.CancelButton = $CancelButton
+
   # Focus TextBox
   if ( $objTextBoxLocation.CanFocus )
   {
@@ -78,25 +104,25 @@ function DisplayBox()
     $objTextBoxLocation.Select()
   }
 
-  $objForm.Topmost = $false
-
   $objForm.Add_Shown({$objForm.Activate()})
   [void] $objForm.ShowDialog()
 
-  return $ret
+  return $location
 }
 
-function Credentials()
+function Credentials($message)
 {
+  $title = "Enter credentials"
   # Get-Credential
   # http://technet.microsoft.com/en-us/library/hh849815.aspx
   # http://technet.microsoft.com/en-us/library/ee692804.aspx
   # http://technet.microsoft.com/en-us/library/hh849815.aspx
   # http://blogs.technet.com/b/jamesone/archive/2009/06/24/how-to-get-user-input-more-nicely-in-powershell.aspx
   # $Credential = Get-Credential
-  $Credential = $Host.ui.PromptForCredential("Title","Message","","")
-  # Username with backslash prepended (damn)
-  # must use substring to remove backslash
+  # This fails somehow if the user press [Cancel] or <Escape>
+  $Credential = $Host.ui.PromptForCredential($title,$message,"","")
+  # Username with backslash prepended (damn), must use substring to 
+  # remove it
   $user = $Credential.Username.toString().Substring(1)
   $password = $Credential.GetNetworkCredential().Password.toString()
   return @($user,$password)
@@ -122,7 +148,7 @@ function PasswordAdvisory()
     # $Icon = 32  # Question
     # $Icon = 48  # Warning
     # $Icon = 64  # Informational
-    
+  
   [System.Windows.Forms.MessageBox]::Show("Empty passwords are not allowed" , "Error", 0, 16)
   return
 }
@@ -135,6 +161,13 @@ while ([string]::IsNullOrEmpty($location))
 {
   # Get location from user
   $location = DisplayBox
+
+  # If the user pressed "Cancel"
+  if (([string]::Compare($location, $EOT)).Equals(0))
+  {
+    return;
+  }
+
   # Condition is true if user pressed [OK]
   if(![string]::IsNullOrEmpty($location))
   {
@@ -146,16 +179,17 @@ while ([string]::IsNullOrEmpty($location))
       {
         $x = PasswordAdvisory
       }
-      $creds = Credentials
+      $creds = Credentials($location)
       $username = $creds[0]
       $password = $creds[1]
       # Display empty password warning all subsequent times
       $flag = 1
     }
-    
+
     # Map the drive if the data seems valid
     if(![string]::IsNullOrEmpty($location) -and ![string]::IsNullOrEmpty($username) -and ![string]::IsNullOrEmpty($password))
     {
+      # http://technet.microsoft.com/en-us/library/bb490717.aspx
       # http://www.howtogeek.com/132354/how-to-map-network-drives-using-powershell/
       # http://thoughts.stuart-edwards.info/index.php/programming/net-use-in-powershell-with-stored-credentials
       $msg = net use * $location /user:$username $password /persistent:no	2>&1
