@@ -24,19 +24,16 @@ function DisplayBox($location)
   $text  = "Text"
   # If the user press OK or <Enter> the textbox contents are returned
   # If the user press Cancel or <Escape> an EOT char (ASCII 0x04) is returned
-  #$location = "https://xnas.local/"
   # http://technet.microsoft.com/en-us/library/ff730941.aspx
-  # Creating a Custom Input Box
   
-  $width = 320
-  $height = 240
+  $width = 300
+  $height = 200
   $p = 15
   $x = 0
   $y = 0
   $w = 0
-  $h = 0
-  $persistent = $false
-  $savecred = $false
+  $h = $p
+  $persistent = $true
 
   # Form
   $objForm = New-Object System.Windows.Forms.Form 
@@ -47,12 +44,10 @@ function DisplayBox($location)
   $objForm.StartPosition = "CenterScreen"
   # Disable resize
   $objForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedSingle
-# Customize Form attributes
+  # Customize Form attributes
   # http://msdn.microsoft.com/en-us/library/System.Windows.Forms.Form%28v=vs.110%29.aspx
   # http://social.technet.microsoft.com/Forums/windowsserver/en-US/16444c7a-ad61-44a7-8c6f-b8d619381a27/using-icons-in-powershell-scripts?forum=winserverpowershell
   # http://msdn.microsoft.com/en-us/library/system.drawing.systemicons%28v=vs.110%29.aspx
-  # $objForm.Icon = [Drawing.Icon]::ExtractAssociatedIcon((Get-Command powershell).Path)
-  #$objForm.Icon [Drawing.Icon]::ExtractAssociatedIcon(@"%SystemRoot%\system32\SHELL32.dll,9");
   $objForm.Icon = [System.Drawing.SystemIcons]::WinLogo #Application
   $objForm.ShowIcon = $true
   $objForm.Topmost = $false
@@ -81,8 +76,7 @@ function DisplayBox($location)
   # Text - Location
   $x = $p
   $y = $p
-  $w = $objForm.Size.Width-2*$p
-  $h = $p
+  $w = $objForm.Width-(2*$p)
   $objLabelLocation = New-Object System.Windows.Forms.Label
   $objLabelLocation.Location = New-Object System.Drawing.Size($x,$y)
   $objLabelLocation.Size = New-Object System.Drawing.Size($w,$h) 
@@ -98,26 +92,20 @@ function DisplayBox($location)
   $objForm.Controls.Add($objTextBoxLocation)
 
   # CheckBox - Persistent
-  $x = 3*$p
-  $y = $y + $objTextBoxLocation.Height + $p
   $w = ($objForm.Size.Width-(10*$p))/2
+  $x = ($objForm.Size.Width - $w) / 2
+  $y = $y + $objTextBoxLocation.Height + $p
   $objCheckBoxPersisent = New-Object System.Windows.Forms.CheckBox
   $objCheckBoxPersisent.Location = New-Object System.Drawing.Size($x,$y)
   $objCheckBoxPersisent.Text = "/persistent"
+  $objCheckBoxPersisent.Checked = $persistent
+  $objCheckBoxPersisent.Size = New-Object System.Drawing.Size($w,$h)
   $objCheckBoxPersisent.Add_CheckedChanged({$persistent = $objCheckBoxPersisent.Checked})
   $objForm.Controls.Add($objCheckBoxPersisent)
   
-  # CheckBox - SaveCred
-  $x = $x + $objCheckBoxPersisent.Width + $p
-  $objCheckBoxSaveCred = New-Object System.Windows.Forms.CheckBox
-  $objCheckBoxSaveCred.Location = New-Object System.Drawing.Size($x,$y)
-  $objCheckBoxSaveCred.Text = "/savecred"
-  $objCheckBoxSaveCred.Add_CheckedChanged({$savecred = $objCheckBoxSaveCred.Checked})
-  $objForm.Controls.Add($objCheckBoxSaveCred)
-
   # OK
   $x = 3*$p
-  $y = $y + $objCheckBoxSaveCred.Height + 2*$p
+  $y = $y + $objCheckBoxPersistent.Height + 2*$p
   $h = 2*$p
   $OKButton = New-Object System.Windows.Forms.Button
   $OKButton.Location = New-Object System.Drawing.Size($x,$y)
@@ -152,8 +140,7 @@ function DisplayBox($location)
   $objForm.Add_Shown({$objForm.Activate()})
   [void] $objForm.ShowDialog()
 
-  #return $location
-  return @($location,$persistent,$savecred)
+  return @($location,$persistent)
 }
 
 function Credentials($message)
@@ -167,8 +154,7 @@ function Credentials($message)
   # $Credential = Get-Credential
   # This fails somehow if the user press [Cancel] or <Escape>
   $Credential = $Host.ui.PromptForCredential($title,$message,"","")
-  # Username with backslash prepended (damn), must use substring to 
-  # remove it
+  # Username with backslash prepended (damn), must use substring to remove it
   $user = $Credential.Username.toString().Substring(1)
   $password = $Credential.GetNetworkCredential().Password.toString()
   return @($user,$password)
@@ -205,16 +191,14 @@ function PasswordAdvisory()
 $flag = 0
 $location = ""
 $persistent = ""
-$savecred = ""
+$URL = "https://xnas.local/"
 
 while ([string]::IsNullOrEmpty($location))
 {
   # Get location from user
-  #$location = DisplayBox
-  $items = DisplayBox
+  $items = DisplayBox $URL
   $location   = $items[0]
   $persistent = $items[1]
-  $savecred   = $items[2]
 
   # If the user pressed "Cancel"
   if (([string]::Compare($location, $EOT)).Equals(0))
@@ -247,26 +231,17 @@ while ([string]::IsNullOrEmpty($location))
       # http://www.howtogeek.com/132354/how-to-map-network-drives-using-powershell/
       # http://thoughts.stuart-edwards.info/index.php/programming/net-use-in-powershell-with-stored-credentials
       
-      # Format $persistent and $savecred
+      # Format $persistent
       if ($persistent)
       {
         $persistent = "yes"
-        if ($savecred)
-        {
-          $savecred = "/savecred"
-        }
-        else
-        {
-          $savecred = ""
-        }
       }
       else
       {
         $persistent = "no"
-        $savecred = ""
       }
       
-      $msg = net use * $location /user:$username $password $savecred /persistent:$persistent	2>&1
+      $msg = net use * $location /user:$username $password /persistent:$persistent	2>&1
       $_ = [System.Windows.Forms.MessageBox]::Show($msg)
     }
   }
