@@ -35,6 +35,8 @@ function DisplayBox($location)
   $y = 0
   $w = 0
   $h = 0
+  $persistent = $false
+  $savecred = $false
 
   # Form
   $objForm = New-Object System.Windows.Forms.Form 
@@ -102,6 +104,7 @@ function DisplayBox($location)
   $objCheckBoxPersisent = New-Object System.Windows.Forms.CheckBox
   $objCheckBoxPersisent.Location = New-Object System.Drawing.Size($x,$y)
   $objCheckBoxPersisent.Text = "/persistent"
+  $objCheckBoxPersisent.Add_CheckedChanged({$persistent = $objCheckBoxPersisent.Checked})
   $objForm.Controls.Add($objCheckBoxPersisent)
   
   # CheckBox - SaveCred
@@ -109,6 +112,7 @@ function DisplayBox($location)
   $objCheckBoxSaveCred = New-Object System.Windows.Forms.CheckBox
   $objCheckBoxSaveCred.Location = New-Object System.Drawing.Size($x,$y)
   $objCheckBoxSaveCred.Text = "/savecred"
+  $objCheckBoxSaveCred.Add_CheckedChanged({$savecred = $objCheckBoxSaveCred.Checked})
   $objForm.Controls.Add($objCheckBoxSaveCred)
 
   # OK
@@ -148,7 +152,8 @@ function DisplayBox($location)
   $objForm.Add_Shown({$objForm.Activate()})
   [void] $objForm.ShowDialog()
 
-  return $location
+  #return $location
+  return @($location,$persistent,$savecred)
 }
 
 function Credentials($message)
@@ -199,18 +204,24 @@ function PasswordAdvisory()
 # Do not display empty password warning the first time
 $flag = 0
 $location = ""
+$persistent = ""
+$savecred = ""
 
 while ([string]::IsNullOrEmpty($location))
 {
   # Get location from user
-  $location = DisplayBox
+  #$location = DisplayBox
+  $items = DisplayBox
+  $location   = $items[0]
+  $persistent = $items[1]
+  $savecred   = $items[2]
 
   # If the user pressed "Cancel"
   if (([string]::Compare($location, $EOT)).Equals(0))
   {
     return;
   }
-
+  
   # Condition is true if user pressed [OK]
   if(![string]::IsNullOrEmpty($location))
   {
@@ -235,7 +246,27 @@ while ([string]::IsNullOrEmpty($location))
       # http://technet.microsoft.com/en-us/library/bb490717.aspx
       # http://www.howtogeek.com/132354/how-to-map-network-drives-using-powershell/
       # http://thoughts.stuart-edwards.info/index.php/programming/net-use-in-powershell-with-stored-credentials
-      $msg = net use * $location /user:$username $password /persistent:no	2>&1
+      
+      # Format $persistent and $savecred
+      if ($persistent)
+      {
+        $persistent = "yes"
+        if ($savecred)
+        {
+          $savecred = "/savecred"
+        }
+        else
+        {
+          $savecred = ""
+        }
+      }
+      else
+      {
+        $persistent = "no"
+        $savecred = ""
+      }
+      
+      $msg = net use * $location /user:$username $password $savecred /persistent:$persistent	2>&1
       $_ = [System.Windows.Forms.MessageBox]::Show($msg)
     }
   }
