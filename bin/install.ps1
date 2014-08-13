@@ -1,5 +1,6 @@
 #	= ^ . ^ =
-# vim: filetype=cs
+#	vim: filetype=cs
+
 # http://stackoverflow.com/a/11440595
 # http://technet.microsoft.com/en-us/library/ee177015.aspx
 
@@ -19,8 +20,8 @@ $PREFIX="$env:SYSTEMDRIVE\xNAS"
 $CACERT="ca.crt"
 $CONNECTOR="xNAS-Connector.ps1"
 
-# http://technet.microsoft.com/en-us/library/ff730955.aspx
 # Create directory if not exist
+# http://technet.microsoft.com/en-us/library/ff730955.aspx
 if (-Not (Test-Path $PREFIX))
 {
   mkdir $PREFIX
@@ -29,7 +30,7 @@ if (-Not (Test-Path $PREFIX))
 # Get the CA certificate
 (new-object System.Net.WebClient).DownloadFile("https://$SERVER/$CACERT","$PREFIX\$CACERT")
 
-# Install certificate if exist
+# Install certificate if exists
 if (Test-Path "$PREFIX\$CACERT")
 {
   # Install the certificate in the "Trusted Root Certificate Authorities" store
@@ -46,14 +47,21 @@ net start WebClient
 # Download the xNAS connector script
 (new-object System.Net.WebClient).DownloadFile("https://$SERVER/$CONNECTOR","$PREFIX\$CONNECTOR")
 
-$lnk = (New-Object -COMobject WScript.Shell).CreateShortcut("$PREFIX\xNAS.lnk")
+# Create a shortcut in the $PREFIX folder and also on All Users Desktop
+$lnkPath = "$PREFIX\xNAS.lnk"
+$AllUsersDesktop = "$env:SYSTEMDRIVE\Users\Public\Desktop"
+
+$lnk = (New-Object -COMobject WScript.Shell).CreateShortcut($lnkPath)
 $lnk.TargetPath = "powershell.exe"
 $lnk.Arguments = "-NoLogo -WindowStyle Hidden -File $PREFIX\$CONNECTOR"
 $lnk.Description = "xNAS Connector"
 $lnk.IconLocation = "$env:SYSTEMROOT\System32\Shell32.dll,9"
 $lnk.WorkingDirectory = "$PREFIX"
+# Window is minimized
 $lnk.WindowStyle = 7
 $lnk.Save()
+
+Copy-Item $lnkPath $AllUsersDesktop
 
 # Make $PREFIX read-only
 # http://technet.microsoft.com/en-us/library/bb490868.aspx
