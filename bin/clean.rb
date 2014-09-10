@@ -9,7 +9,6 @@ require 'net/ldap'
 
 treebase = "dc=xnas,dc=local"
 
-
 # Define the order of targets and the attributes to pivot on to be deleted
 target =
 {
@@ -17,6 +16,12 @@ target =
   {
     :dn => "ou=webdav,ou=groups" + "," +  treebase ,
     :objectClass => "groupOfNames",
+    :attribs => ["dn","cn"]
+  },
+  :alumnos =>
+  {
+    :dn => "ou=alumnos,ou=users" + "," +  treebase ,
+    :objectClass => "simpleSecurityObject",
     :attribs => ["dn","cn"]
   },
   :materias =>
@@ -34,6 +39,12 @@ target =
   :profesores => 
   {
     :dn => "ou=profesores,ou=users" + "," +  treebase ,
+    :objectClass => "posixAccount",
+    :attribs => ["dn","cn","uid"]
+  },
+  :staff =>
+  {
+    :dn => "ou=staff,ou=users" + "," +  treebase ,
     :objectClass => "posixAccount",
     :attribs => ["dn","cn","uid"]
   },

@@ -90,25 +90,139 @@ module XNAS
     return string
   end
 
+  ########  staff
+
+  def staff_load(ldap,filename)
+
+    number = 10000
+
+    treebase       = "dc=xnas,dc=local"
+    posixAccountOU = "ou=staff,ou=users" + "," + treebase
+    posixGroupDN = "cn=support,ou=unix,ou=groups" + "," + treebase
+    posixGroupAttribute = "memberUid"
+    homeDirectoryPrefix     = "/opt/xNAS/files/staff/"
+    loginShell = "/bin/bash"
+    employeeType = "staff"
+    userPassword = "thesis"
+    gidNumber = "10000"
+
+    staff = []
+    i=0
+
+    posix_group_dn = "cn=support,ou=unix,ou=groups" + "," + treebase
+
+    posix_group_attributes =
+    {
+        :objectclass =>
+      [
+        "top" ,
+        "posixGroup"
+      ] ,
+      :cn => "support" ,
+      :gidNumber => number.to_s() ,
+    }
+
+    #puts YAML::dump(posix_group_attributes) if (DEBUG)
+    ldap.add( :dn => posix_group_dn , :attributes => posix_group_attributes)
+    print_result(ldap)
+
+#    return false unless (ldap.get_operation_result == 0 or ldap.get_operation_result == 20)
+
+    number+=1
+    CSV.foreach(filename) do |row|
+      username , name , mail , curp = row
+      next if username == "usuario"
+      name = name.split(" ").map {|word| word.capitalize}.join(" ")
+      staff[i] = [username , name , mail , curp]
+      i+=1
+      commonName  = username
+      displayName = name
+
+      posixAccountDN = "uid=" + commonName + "," + posixAccountOU
+      posixAccountAttributes =
+      {
+        :objectclass =>
+        [
+          "top" ,
+          "person" ,
+          "organizationalPerson" ,
+          "inetOrgPerson" ,
+          "posixAccount" ,
+          "shadowAccount"
+        ] ,
+        :uid            => commonName ,
+        :cn             => commonName ,
+        :sn             => "." ,
+        :mail           => mail ,
+        :description    => displayName ,
+        :employeeNumber => curp ,
+        :employeeType   => employeeType ,
+        :uidNumber      => number.to_s(),
+        :gidNumber      => gidNumber ,
+        :homeDirectory  => homeDirectoryPrefix + commonName ,
+        :loginShell     => loginShell ,
+        :userPassword   => userPassword
+      }
+
+      ldap.add( :dn => posixAccountDN , :attributes => posixAccountAttributes)
+
+      # Check OpenLDAP return status
+      # http://www.openldap.org/doc/admin24/appendix-ldap-result-codes.html
+      code = ldap.get_operation_result.code
+      case code
+        # 0 success
+        when 0
+          puts "+ " + posixAccountDN
+      
+          # If the result is successful add the user to the defined posixGroup and create the homeDirectory
+          if (ldap.get_operation_result)
+            ldap.add_attribute(posixGroupDN, :memberUid, commonName)
+
+            # Check OpenLDAP return status
+            code = ldap.get_operation_result.code
+            case code
+              # 0 success
+              when 0
+                puts "/ "+posixGroupDN + " : " + posixGroupAttribute + " << " + commonName
+              # 20 attributeOrValueExists
+              when 20
+                puts "* "+posixGroupDN + " : " + posixGroupAttribute + " << " + commonName + "\t" + "attributeOrValueExists"
+              # 53 unwillingToPerform
+              else
+                ldap.delete( :dn => posixAccountDN )
+                puts "! "+posixGroupDN + " : " + posixGroupAttribute + " << " + commonName
+                puts "- " + posixAccountDN
+            end
+          end
+        # 20 attributeOrValueExists
+        when 20
+          puts "* " + posixAccountDN + " << " + commonName + "\t" + "attributeOrValueExists"
+        # 53 unwillingToPerform
+        else
+          puts "! " + posixAccountDN
+      end
+      
+      number+=1
+    end
+  end
+
   ########  profesor
-  
   
   def profesor_load(ldap,filename)
     
-  number = 20000 + 1
+    number = 20000 + 1
 
-  treebase       = "dc=xnas,dc=local"
-  posix_account_ou = "ou=profesores,ou=users" + "," + treebase
-  posix_group_ou = "ou=unix,ou=groups" + "," + treebase
-  posix_group_attribute = "memberUid"
-  home_prefix     = "/opt/xNAS/files/profesor/"
-  login_shell = "/usr/sbin/nologin"
-  employee_type = "profesor"
-  user_password = "thesis"
-  gid_number = number
-  fallback_mail = "nobody@localhost"
+    treebase       = "dc=xnas,dc=local"
+    posix_account_ou = "ou=profesores,ou=users" + "," + treebase
+    posix_group_ou = "ou=unix,ou=groups" + "," + treebase
+    posix_group_attribute = "memberUid"
+    home_prefix     = "/opt/xNAS/files/profesor/"
+    login_shell = "/usr/sbin/nologin"
+    employee_type = "profesor"
+    user_password = "thesis"
+    gid_number = number
+    fallback_mail = "nobody@localhost"
 
-    
     profesores = []
     i=0
 
@@ -250,18 +364,18 @@ module XNAS
 
   def materias_load(ldap,file)
 
-  number = 20000 + 1
-  
-  treebase       = "dc=xnas,dc=local"
-  posix_account_ou = "ou=profesores,ou=users" + "," + treebase
-  posix_group_ou = "ou=unix,ou=groups" + "," + treebase
-  posix_group_attribute = "memberUid"
-  home_prefix     = "/opt/xNAS/files/profesor/"
-  login_shell = "/usr/sbin/nologin"
-  employee_type = "profesor"
-  user_password = "thesis"
-  gid_number = number
-  fallback_mail = "nobody@localhost"
+    number = 20000 + 1
+    
+    treebase       = "dc=xnas,dc=local"
+    posix_account_ou = "ou=profesores,ou=users" + "," + treebase
+    posix_group_ou = "ou=unix,ou=groups" + "," + treebase
+    posix_group_attribute = "memberUid"
+    home_prefix     = "/opt/xNAS/files/profesor/"
+    login_shell = "/usr/sbin/nologin"
+    employee_type = "profesor"
+    user_password = "thesis"
+    gid_number = number
+    fallback_mail = "nobody@localhost"
 
     profesores = []
     materias = []
@@ -460,18 +574,19 @@ module XNAS
 
 ########  ./alumnos.rb
 
+  def alumnos_load(ldap,file)
   treebase     = "dc=xnas,dc=local"
   account_ou    = "ou=alumnos,ou=users" + "," + treebase
   employee_type = "alumno"
   user_password = "thesis"
   mail = "nobody@localhost"
 
+  
   current = last = nil
 
   alumnos = []
   i=0
 
-  def alumnos_load(ldap,file)
     CSV.foreach(file) do |row|
       num_cta, name, mail, id_materia, id_grupo = row
       next if num_cta == "CUENTA"
