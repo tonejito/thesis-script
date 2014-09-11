@@ -57,7 +57,7 @@ module XNAS
 
   def strip_accents(string="")
     replacement =
-    {  
+    {
       'á' => 'a','à' => 'a','Á' => 'A','À' => 'A',
       'é' => 'e','è' => 'e','È' => 'E','É' => 'E',
       'í' => 'i','ì' => 'i','Ì' => 'I','Í' => 'I',
@@ -173,7 +173,7 @@ module XNAS
         # 0 success
         when 0
           puts "+ " + posixAccountDN
-      
+
           # If the result is successful add the user to the defined posixGroup and create the homeDirectory
           if (ldap.get_operation_result)
             ldap.add_attribute(posixGroupDN, :memberUid, commonName)
@@ -201,15 +201,15 @@ module XNAS
         else
           puts "! " + posixAccountDN
       end
-      
+
       number+=1
     end
   end
 
   ########  profesor
-  
+
   def profesor_load(ldap,filename)
-    
+
     number = 20000 + 1
 
     treebase       = "dc=xnas,dc=local"
@@ -337,7 +337,7 @@ module XNAS
     #    puts profesor[1]
     #  end
   end
-  
+
   def profesor_find(ldap,name,treebase)
     name = normalize(name)
     filter = "(&(objectClass=posixAccount)(objectClass=inetOrgPerson)(cn=#{name}*))"
@@ -365,7 +365,7 @@ module XNAS
   def materias_load(ldap,file)
 
     number = 20000 + 1
-    
+
     treebase       = "dc=xnas,dc=local"
     posix_account_ou = "ou=profesores,ou=users" + "," + treebase
     posix_group_ou = "ou=unix,ou=groups" + "," + treebase
@@ -454,9 +454,9 @@ module XNAS
             p_name = b
           end
         end
-        
+
         found = profesor_find(ldap,normalize(p_name),treebase) if (rfc.nil?)
-        puts found.inspect if (rfc.nil?)
+        puts "! (rfc = nil)" + found.inspect if (rfc.nil?)
         # Sinche the returned elements are multivalued, the symbols point to arrays :|
         rfc = found[:uid][0].to_s unless (found.nil? or found[:uid].nil? or found[:uid].empty?)
         p_name = normalize(found[:description][0].to_s) unless (found.nil? or found[:description].nil? or found[:description].empty?)
@@ -468,14 +468,14 @@ module XNAS
         materias[i] = [ id, grupo, materia, rfc , p_name ]
         #mat[:id] => { :name => materia , :group => grupo , :rfc => rfc }
 
-        group_of_names_cn = rfc + "-" + id + "-" + grupo
+        group_of_names_cn = id + "-" + grupo + "-" + rfc
         #group_of_names_cn = materias[i][3] + "-" + materias[i][0] + "-" + materias[i][1]
         group_of_names_dn = "cn=" + group_of_names_cn + "," + "ou=webdav,ou=groups" + "," + treebase
-        group_of_names_attributes = 
+        group_of_names_attributes =
         {
           :objectClass =>
           [
-            "top", 
+            "top",
             "groupOfNames"
           ] ,
           :cn => group_of_names_cn ,
@@ -514,7 +514,7 @@ module XNAS
   def group_find(ldap,m_id,g_id,treebase)
     m_id = normalize(m_id)
     g_id = normalize(g_id)
-    filter = "(&(objectClass=groupOfNames)(cn=*-#{m_id}-#{g_id}))"
+    filter = "(&(objectClass=groupOfNames)(cn=#{m_id}-#{g_id}-*))"
     puts "? #{m_id}-#{g_id} => #{filter}"
     # Run a tree search of all matching elements and map them into a hash
     found = ldap.search(
@@ -536,7 +536,7 @@ module XNAS
     end
     return r
   end
-  
+
   #puts YAML::dump(bad) if (DEBUG)
   def badish
   # Post process each bad entry to match against the profesor names in a regular expression fashion
@@ -581,7 +581,7 @@ module XNAS
   user_password = "thesis"
   mail = "nobody@localhost"
 
-  
+
   current = last = nil
 
   alumnos = []
@@ -598,7 +598,7 @@ module XNAS
       common_name  = num_cta
       display_name = XNAS.get_display_name(name)
       last = num_cta
-      
+
       account_dn = "cn=" + common_name + "," + account_ou
       account_attributes =
       {
@@ -618,11 +618,11 @@ module XNAS
         :employeeType   => employee_type ,
         :userPassword   => user_password
       }
-      
+
       #puts YAML::dump(accountAttributes)
       ldap.add( :dn => account_dn , :attributes => account_attributes )
       XNAS.print_result(ldap)
-      
+
       # Check OpenLDAP return status
       # http://www.openldap.org/doc/admin24/appendix-ldap-result-codes.html
       case ldap.get_operation_result.code
@@ -662,5 +662,5 @@ module XNAS
       end
     end
   end
-  
+
 end
