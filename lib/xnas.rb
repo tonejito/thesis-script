@@ -287,34 +287,6 @@ module XNAS
         # 0 success
         when 0
           puts "+ " + posix_account_dn if (DEBUG)
-
-          # If the result is successful add the user to the defined posixGroup and create the homeDirectory
-          if (ldap.get_operation_result.code == 0)
-            #puts YAML::dump(posix_group_attributes) if (DEBUG)
-            ldap.add( :dn => posix_group_dn , :attributes => posix_group_attributes)
-            print_result(ldap)
-
-            # Check OpenLDAP return status
-            case ldap.get_operation_result.code
-              # 0 success
-              when 0
-                puts "+ "+posix_group_dn + " : " + posix_group_attribute + " << " + rfc if (DEBUG)
-              # 20 attributeOrValueExists
-              when 20
-                puts "* "+posix_group_dn + " : " + posix_group_attribute + " << " + rfc + "\t" + "attributeOrValueExists"
-              # 68 entryAlreadyExists
-              when 68
-                puts "* "+posix_group_dn + " : " + posix_group_attribute + " << " + rfc + "\t" + "entryAlreadyExists"
-            # 53 unwillingToPerform
-              else
-                puts "! "+posix_group_dn + " : " + posix_group_attribute + " << " + rfc
-                # rollback
-                ldap.delete( :dn => posix_account_dn )
-                ldap.delete( :dn => posix_group_dn )
-                puts "- " + posix_account_dn
-                puts "- " + posix_group_dn
-            end
-          end
         # 20 attributeOrValueExists
         when 20
           puts "* " + posix_account_dn + " << " + rfc + "\t" + "attributeOrValueExists"
@@ -326,11 +298,40 @@ module XNAS
           puts "! " + posix_account_dn
       end
 
+      if (ldap.get_operation_result == 0 or ldap.get_operation_result == 20)
+        # If the result is successful add the user to the defined posixGroup and create the homeDirectory
+        if (ldap.get_operation_result.code == 0)
+          #puts YAML::dump(posix_group_attributes) if (DEBUG)
+          ldap.add( :dn => posix_group_dn , :attributes => posix_group_attributes)
+          print_result(ldap)
+
+          # Check OpenLDAP return status
+          case ldap.get_operation_result.code
+            # 0 success
+            when 0
+              puts "+ "+posix_group_dn + " : " + posix_group_attribute + " << " + rfc if (DEBUG)
+            # 20 attributeOrValueExists
+            when 20
+              puts "* "+posix_group_dn + " : " + posix_group_attribute + " << " + rfc + "\t" + "attributeOrValueExists"
+            # 68 entryAlreadyExists
+            when 68
+              puts "* "+posix_group_dn + " : " + posix_group_attribute + " << " + rfc + "\t" + "entryAlreadyExists"
+          # 53 unwillingToPerform
+            else
+              puts "! "+posix_group_dn + " : " + posix_group_attribute + " << " + rfc
+              # rollback
+              ldap.delete( :dn => posix_account_dn )
+              ldap.delete( :dn => posix_group_dn )
+              puts "- " + posix_account_dn
+              puts "- " + posix_group_dn
+          end
+        end
+      end
+
       number+=1
     end
 
     #puts YAML::dump(profesores) if (DEBUG)
-
     #  profesores.each do |profesor|
     #    #puts profesor.inspect
     #    #puts YAML::dump(profesor)
@@ -441,7 +442,7 @@ module XNAS
           puts "! " + displayName
       end
 
-      if (ldap.get_operation_result.code == 0 or ldap.get_operation_result.code == 20)
+      #if (ldap.get_operation_result.code == 0 or ldap.get_operation_result.code == 20)
         rfc = nil
         a = b = nil
         # assign profesor identifier (rfc) to each subject
@@ -455,10 +456,11 @@ module XNAS
           end
         end
 
-        found = profesor_find(ldap,normalize(p_name),treebase) if (rfc.nil?)
-        puts "! (rfc = nil)" + found.inspect if (rfc.nil?)
+#        found = profesor_find(ldap,normalize(p_name),treebase) if (rfc.nil?)
+        found = profesor_find(ldap,normalize(p_name),treebase)
         # Sinche the returned elements are multivalued, the symbols point to arrays :|
         rfc = found[:uid][0].to_s unless (found.nil? or found[:uid].nil? or found[:uid].empty?)
+        puts "! (rfc = nil)" + found.inspect if (rfc.nil?)
         p_name = normalize(found[:description][0].to_s) unless (found.nil? or found[:description].nil? or found[:description].empty?)
         bad << i if (rfc.nil? or rfc.empty?)
         #puts row.inspect if (rfc.nil? or rfc.empty?)
@@ -505,9 +507,9 @@ module XNAS
           # 53 unwillingToPerform
           else
             puts "! " + group_of_names_dn
-         end
+        end
 
-      end
+      #end
     end
   end
 
