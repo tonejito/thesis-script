@@ -21,9 +21,16 @@ module XNAS
   extend self
   ########	vars
 
+  VERBOSE = true
   DEBUG = true
 
   ########	def
+
+  def valid_status(code)
+    valid = false
+    valid = true if (code == 0 or code == 20)
+    return valid
+  end
 
   def get_name(identifier="")
     return identifier.split(" ").map {|word| word.capitalize}.join(" ")
@@ -45,11 +52,24 @@ module XNAS
     return string.dup.force_encoding("ASCII-8BIT")
   end
 
-  def print_result(ldap)
-    if (DEBUG)
-      p ldap.get_operation_result unless (ldap.get_operation_result.code == 0)
-    else
-      p ldap.get_operation_result unless (ldap.get_operation_result.code == 0)
+  def print_result(code,display_name,index="",group="")
+    index = " << " + index unless (index.empty?)
+    group = " : " + group unless (group.empty?)
+    # Check OpenLDAP return status
+    case code
+      # 0 success
+      when 0
+        puts "+ " + display_name + group + index if (DEBUG)
+      # 20 attributeOrValueExists
+      when 20
+        puts "* " + display_name + group + index + "\t" + "attributeOrValueExists"
+      # 68 entryAlreadyExists
+      when 68
+        puts "* " + display_name + group + index + "\t" + "entryAlreadyExists"
+      # 21 unknownResult
+      # 53 unwillingToPerform
+      else
+        puts "! " + display_name + group + index
     end
   end
 
@@ -124,9 +144,9 @@ module XNAS
 
     #puts YAML::dump(posix_group_attributes) if (DEBUG)
     ldap.add( :dn => posix_group_dn , :attributes => posix_group_attributes)
-    print_result(ldap)
+    print_result(ldap,posix_group_dn)
 
-#    return false unless (ldap.get_operation_result == 0 or ldap.get_operation_result == 20)
+    return false unless (valid_status(ldap.get_operation_result.code))
 
     number+=1
     CSV.foreach(filename) do |row|
@@ -165,41 +185,13 @@ module XNAS
       }
 
       ldap.add( :dn => posixAccountDN , :attributes => posixAccountAttributes)
+      print_result(ldap.get_operation_result.code,posixAccountDN)
 
-      # Check OpenLDAP return status
-      # http://www.openldap.org/doc/admin24/appendix-ldap-result-codes.html
-      code = ldap.get_operation_result.code
-      case code
-        # 0 success
-        when 0
-          puts "+ " + posixAccountDN
-
-          # If the result is successful add the user to the defined posixGroup and create the homeDirectory
-          if (ldap.get_operation_result)
-            ldap.add_attribute(posixGroupDN, :memberUid, commonName)
-
-            # Check OpenLDAP return status
-            code = ldap.get_operation_result.code
-            case code
-              # 0 success
-              when 0
-                puts "/ "+posixGroupDN + " : " + posixGroupAttribute + " << " + commonName
-              # 20 attributeOrValueExists
-              when 20
-                puts "* "+posixGroupDN + " : " + posixGroupAttribute + " << " + commonName + "\t" + "attributeOrValueExists"
-              # 53 unwillingToPerform
-              else
-                ldap.delete( :dn => posixAccountDN )
-                puts "! "+posixGroupDN + " : " + posixGroupAttribute + " << " + commonName
-                puts "- " + posixAccountDN
-            end
-          end
-        # 20 attributeOrValueExists
-        when 20
-          puts "* " + posixAccountDN + " << " + commonName + "\t" + "attributeOrValueExists"
-        # 53 unwillingToPerform
-        else
-          puts "! " + posixAccountDN
+      if (valid_status(ldap.get_operation_result.code))
+        ldap.add_attribute(posixGroupDN, :memberUid, commonName)
+        print_result(ldap.get_operation_result.code,posixGroupDN,commonName,posixGroupAttribute)
+        # rollback
+        ldap.delete( :dn => posixAccountDN ) unless (valid_status(ldap.get_operation_result.code))
       end
 
       number+=1
@@ -209,7 +201,6 @@ module XNAS
   ########  profesor
 
   def profesor_load(ldap,filename)
-
     number = 20000 + 1
 
     treebase       = "dc=xnas,dc=local"
@@ -279,53 +270,20 @@ module XNAS
 
       #puts YAML::dump(posix_account_attributes) if (DEBUG)
       ldap.add( :dn => posix_account_dn , :attributes => posix_account_attributes )
-      print_result(ldap)
+      print_result(ldap.get_operation_result.code,posix_account_dn,rfc)
 
-      # Check OpenLDAP return status
-      # http://www.openldap.org/doc/admin24/appendix-ldap-result-codes.html
-      case ldap.get_operation_result.code
-        # 0 success
-        when 0
-          puts "+ " + posix_account_dn if (DEBUG)
-        # 20 attributeOrValueExists
-        when 20
-          puts "* " + posix_account_dn + " << " + rfc + "\t" + "attributeOrValueExists"
-        # 68 entryAlreadyExists
-        when 68
-          puts "* " + posix_account_dn + " << " + rfc + "\t" + "entryAlreadyExists"
-        # 53 unwillingToPerform
-        else
-          puts "! " + posix_account_dn
-      end
-
-      if (ldap.get_operation_result == 0 or ldap.get_operation_result == 20)
+      if (valid_status(ldap.get_operation_result.code))
         # If the result is successful add the user to the defined posixGroup and create the homeDirectory
-        if (ldap.get_operation_result.code == 0)
+#        if (ldap.get_operation_result.code == 0)
           #puts YAML::dump(posix_group_attributes) if (DEBUG)
           ldap.add( :dn => posix_group_dn , :attributes => posix_group_attributes)
-          print_result(ldap)
+          print_result(ldap.get_operation_result.code,posix_group_dn,rfc,posix_group_attribute)
 
-          # Check OpenLDAP return status
-          case ldap.get_operation_result.code
-            # 0 success
-            when 0
-              puts "+ "+posix_group_dn + " : " + posix_group_attribute + " << " + rfc if (DEBUG)
-            # 20 attributeOrValueExists
-            when 20
-              puts "* "+posix_group_dn + " : " + posix_group_attribute + " << " + rfc + "\t" + "attributeOrValueExists"
-            # 68 entryAlreadyExists
-            when 68
-              puts "* "+posix_group_dn + " : " + posix_group_attribute + " << " + rfc + "\t" + "entryAlreadyExists"
-          # 53 unwillingToPerform
-            else
-              puts "! "+posix_group_dn + " : " + posix_group_attribute + " << " + rfc
-              # rollback
-              ldap.delete( :dn => posix_account_dn )
-              ldap.delete( :dn => posix_group_dn )
-              puts "- " + posix_account_dn
-              puts "- " + posix_group_dn
+          # rollback
+          unless (valid_status(ldap.get_operation_result.code))
+            ldap.delete( :dn => posix_account_dn )
+            ldap.delete( :dn => posix_group_dn )
           end
-        end
       end
 
       number+=1
@@ -424,25 +382,9 @@ module XNAS
       }
 
       ldap.add( :dn => displayName , :attributes => materia_attributes)
-      print_result(ldap)
+      print_result(ldap.get_operation_result.code,displayName,commonName)
 
-      # Check OpenLDAP return status
-      case ldap.get_operation_result.code
-        # 0 success
-        when 0
-          puts "+ " + displayName if (DEBUG)
-        # 20 attributeOrValueExists
-        when 20
-          puts "* " + displayName + " << " + commonName + "\t" + "attributeOrValueExists"
-        # 68 entryAlreadyExists
-        when 68
-          puts "* " + displayName + " << " + commonName + "\t" + "entryAlreadyExists"
-        # 53 unwillingToPerform
-        else
-          puts "! " + displayName
-      end
-
-      #if (ldap.get_operation_result.code == 0 or ldap.get_operation_result.code == 20)
+      if (valid_status(ldap.get_operation_result.code))
         rfc = nil
         a = b = nil
         # assign profesor identifier (rfc) to each subject
@@ -491,25 +433,8 @@ module XNAS
         i += 1
         #puts YAML::dump([group_of_names_dn , group_of_names_attributes]) if (DEBUG)
         ldap.add( :dn => group_of_names_dn , :attributes => group_of_names_attributes)
-        print_result(ldap)
-
-        # Check OpenLDAP return status
-        case ldap.get_operation_result.code
-          # 0 success
-          when 0
-            puts "+ " + group_of_names_dn + " << " + rfc if (DEBUG)
-          # 20 attributeOrValueExists
-          when 20
-            puts "* " + group_of_names_dn + " << " + rfc + "\t" + "attributeOrValueExists"
-          # 68 entryAlreadyExists
-          when 68
-            puts "* " + group_of_names_dn + " << " + rfc + "\t" + "entryAlreadyExists"
-          # 53 unwillingToPerform
-          else
-            puts "! " + group_of_names_dn
-        end
-
-      #end
+        print_result(ldap.get_operation_result.code,group_of_names_dn,rfc)
+      end
     end
   end
 
@@ -577,17 +502,17 @@ module XNAS
 ########  ./alumnos.rb
 
   def alumnos_load(ldap,file)
-  treebase     = "dc=xnas,dc=local"
-  account_ou    = "ou=alumnos,ou=users" + "," + treebase
-  employee_type = "alumno"
-  user_password = "thesis"
-  mail = "nobody@localhost"
+    treebase     = "dc=xnas,dc=local"
+    account_ou    = "ou=alumnos,ou=users" + "," + treebase
+    employee_type = "alumno"
+    user_password = "thesis"
+    mail = "nobody@localhost"
 
 
-  current = last = nil
+    current = last = nil
 
-  alumnos = []
-  i=0
+    alumnos = []
+    i=0
 
     CSV.foreach(file) do |row|
       num_cta, name, mail, id_materia, id_grupo = row
@@ -595,7 +520,7 @@ module XNAS
       name = XNAS.normalize(name)
       alumnos[i] = [num_cta, name, mail, id_materia, id_grupo]
       # skip same employeeNumber
-      next if num_cta == last
+#      next if num_cta == last
       i+=1
       common_name  = num_cta
       display_name = XNAS.get_display_name(name)
@@ -623,46 +548,18 @@ module XNAS
 
       #puts YAML::dump(accountAttributes)
       ldap.add( :dn => account_dn , :attributes => account_attributes )
-      XNAS.print_result(ldap)
+      print_result(ldap.get_operation_result.code,account_dn,common_name)
 
-      # Check OpenLDAP return status
-      # http://www.openldap.org/doc/admin24/appendix-ldap-result-codes.html
-      case ldap.get_operation_result.code
-        # 0 success
-        when 0
-          puts "+ " + account_dn
-        # 20 attributeOrValueExists
-        when 20
-          puts "* " + account_dn + " << " + common_name + "\t" + "attributeOrValueExists"
-        # 68 entryAlreadyExists
-        when 68
-          puts "* " + account_dn + " << " + common_name + "\t" + "entryAlreadyExists"
-        # 53 unwillingToPerform
-        else
-          puts "! " + account_dn
-      end
-
-      if (ldap.get_operation_result.code == 0 or ldap.get_operation_result.code == 20)
+      if (valid_status(ldap.get_operation_result.code))
         # Add account to group when return code is 0 or 20
         group_of_names_dn = XNAS.group_find(ldap,id_materia,id_grupo,treebase)
         group_of_names_attribute = "member"
         #puts YAML::dump([group_of_names_dn , group_of_names_attribute, account_dn])
         unless (group_of_names_dn.nil? or group_of_names_dn.empty?)
           ldap.add_attribute( group_of_names_dn[:dn] , :member , account_dn)
-          XNAS.print_result(ldap)
-          case ldap.get_operation_result.code
-            when 0
-              puts "+ " + group_of_names_dn[:dn] + " << " + num_cta
-            when 20
-              puts "* " + group_of_names_dn[:dn] + " << " + num_cta + "\t" + "attributeOrValueExists"
-            when 68
-              puts "* " + group_of_names_dn[:dn] + " << " + num_cta + "\t" + "entryAlreadyExists"
-            else
-              puts "! " + group_of_names_dn[:dn]
-          end
+          print_result(ldap.get_operation_result.code,group_of_names_dn[:dn],num_cta)
         end
       end
     end
   end
-
 end
