@@ -76,7 +76,7 @@ target.each do |ou,data|
     :return_result => true
   ).each do |item|
     # Print the current item being deleted
-    puts "- " + item.dn
+#    puts "- " + item.dn
     ldap.delete_tree( :dn => item.dn)
     # Print errors (if any)
     p ldap.get_operation_result unless (ldap.get_operation_result.code == 0)
