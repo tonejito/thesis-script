@@ -21,14 +21,14 @@ module XNAS
   extend self
   ########	vars
 
-  VERBOSE = true
-  DEBUG = true
+  VERBOSE = false
+  DEBUG = false
 
   ########	def
 
   def valid_status(code)
     valid = false
-    valid = true if (code == 0 or code == 20)
+    valid = true if (code == 0 or code == 20 or code == 68)
     return valid
   end
 
@@ -49,6 +49,7 @@ module XNAS
   end
 
   def get_ascii_string(string="")
+    # http://stackoverflow.com/questions/1268289/how-to-get-rid-of-non-ascii-characters-in-ruby
     return string.dup.force_encoding("ASCII-8BIT")
   end
 
@@ -62,10 +63,10 @@ module XNAS
         puts "+ " + display_name + group + index if (DEBUG)
       # 20 attributeOrValueExists
       when 20
-        puts "* " + display_name + group + index + "\t" + "attributeOrValueExists"
+        puts "* " + display_name + group + index + "\t" + "attributeOrValueExists" if (VERBOSE)
       # 68 entryAlreadyExists
       when 68
-        puts "* " + display_name + group + index + "\t" + "entryAlreadyExists"
+        puts "* " + display_name + group + index + "\t" + "entryAlreadyExists" if (VERBOSE)
       # 21 unknownResult
       # 53 unwillingToPerform
       else
@@ -85,7 +86,17 @@ module XNAS
       'ú' => 'u','ù' => 'u','Ù' => 'U','Ú' => 'U',
       'ñ' => 'n','Ñ' => 'N','ü' => 'u','Ü' => 'U'
     }
-    return string.gsub(/[áàÁÀéèÈÉíìÌÍóòÒÓúùÙÚñüÑÜ]/,replacement)
+    string = string.gsub(/[áàÁÀéèÈÉíìÌÍóòÒÓúùÙÚñüÑÜ]/,replacement)
+
+    # Remove characters not in the range of \w [a-zA-Z0-9_]
+    # 20 (space)
+    # 2D -
+    # 41-5A [A-Z]
+    # 5F _
+    # 61-7A [a-z]
+    #string = string.gsub(/[\x00-\x1A]|[\x21-\x2C]|[\x2E-\x40]|[\x5B-\x5E]|[\x60]|[\x7B-\x7F]/,"")
+
+    return string
   end
 
   def strip_title_tag(string="")
@@ -105,17 +116,32 @@ module XNAS
     string = string.gsub(/\ /,'-')
     # Replace accented letters with [[:alpha:]] chars
     string = strip_accents(string).downcase
-    # Remove characters not in the range of \w [a-zA-Z0-9_]
+    string = get_ascii_string(string)
     string = string.split("-").map {|word| word.gsub(/\W/,'')}.join("-")
     return string
   end
 
+  def different(filename,except=[])
+    id = nil
+    items = []
+    i = t = 0
+    CSV.foreach(filename) do |row|
+      id = row[0]
+      next if except.include?(id)
+      unless items.include?(id)
+       items[i] = id
+       #puts id if (DEBUG)
+        i+=1
+      end
+      t+=1
+    end
+    return [i,t]
+  end
+
   ########  staff
 
-  def staff_load(ldap,filename)
-
+  def staff_load(ldap,filename,out,err)
     number = 10000
-
     treebase       = "dc=xnas,dc=local"
     posixAccountOU = "ou=staff,ou=users" + "," + treebase
     posixGroupDN = "cn=support,ou=unix,ou=groups" + "," + treebase
@@ -125,12 +151,18 @@ module XNAS
     employeeType = "staff"
     userPassword = "thesis"
     gidNumber = "10000"
-
     staff = []
     i=0
 
-    posix_group_dn = "cn=support,ou=unix,ou=groups" + "," + treebase
+    output = open(out,'w')
+    output.truncate(0)
+    output.write("usuario,Nombre,correo,CURP\n")
 
+    failed = open(err,'w')
+    failed.truncate(0)
+    failed.write("usuario,Nombre,correo,CURP\n")
+
+    posix_group_dn = "cn=support,ou=unix,ou=groups" + "," + treebase
     posix_group_attributes =
     {
         :objectclass =>
@@ -142,10 +174,9 @@ module XNAS
       :gidNumber => number.to_s() ,
     }
 
-    #puts YAML::dump(posix_group_attributes) if (DEBUG)
     ldap.add( :dn => posix_group_dn , :attributes => posix_group_attributes)
     print_result(ldap,posix_group_dn)
-
+    puts ldap.get_operation_result.inspect
     return false unless (valid_status(ldap.get_operation_result.code))
 
     number+=1
@@ -196,11 +227,13 @@ module XNAS
 
       number+=1
     end
+    output.close
+    failed.close
   end
 
   ########  profesor
 
-  def profesor_load(ldap,filename)
+  def profesor_load(ldap,filename,out,err)
     number = 20000 + 1
 
     treebase       = "dc=xnas,dc=local"
@@ -217,6 +250,14 @@ module XNAS
     profesores = []
     i=0
 
+    output = open(out,'w')
+    output.truncate(0)
+    output.write("RFC,NOMBRE,mail\n")
+
+    failed = open(err,'w')
+    failed.truncate(0)
+    failed.write("RFC,NOMBRE,mail\n")
+
     CSV.foreach(filename) do |row|
       rfc, name, mail = row
       next if rfc == "RFC"
@@ -224,7 +265,14 @@ module XNAS
       name = get_name(strip_accents(name))
       rfc = rfc[0,9]
       mail = fallback_mail if (mail.nil? or mail.empty?)
+      if /\W/.match(name.gsub(/[\s_-]+/,""))
+        posix_account_dn = "uid=" + rfc + "," + posix_account_ou
+        print_result(-1,posix_account_dn,rfc)
+        failed.write([ rfc , name , mail ].join(",")+"\n")
+        next
+      end
       profesores[i] = [rfc, name, mail]
+      output.write(profesores[i].join(",")+"\n")
       i+=1
 
       common_name = get_common_name(name)
@@ -295,6 +343,8 @@ module XNAS
     #    #puts YAML::dump(profesor)
     #    puts profesor[1]
     #  end
+    output.close
+    failed.close
   end
 
   def profesor_find(ldap,name,treebase)
@@ -307,7 +357,8 @@ module XNAS
       :attributes => ["dn","uid","description"],
       :return_result => true)
     #puts YAML::dump(found)
-    puts "? #{name} => #{filter}" if (DEBUG && found.length == 0)
+    puts "? #{name} => #{filter}" if (VERBOSE)
+    puts "=> #{found}" if (DEBUG)
     return found[0]
   end
 
@@ -321,7 +372,7 @@ module XNAS
     return true
   end
 
-  def materias_load(ldap,file)
+  def materias_load(ldap,file,out,err)
 
     number = 20000 + 1
 
@@ -341,6 +392,14 @@ module XNAS
     i=0
     bad = []
     current = last = nil
+
+    output = open(out,'w')
+    output.truncate(0)
+    output.write("ID,GRUPO,MATERIA,RFC,PROFESOR\n")
+
+    failed = open(err,'w')
+    failed.truncate(0)
+    failed.write("ID,GRUPO,MATERIA,RFC,PROFESOR\n")
 
     # Parse CSV file
     CSV.foreach(file) do |row|
@@ -390,8 +449,11 @@ module XNAS
         # assign profesor identifier (rfc) to each subject
         profesores.each do |profesor|
           # Normalize strings before comparison
-          a = p_name.chomp.upcase.gsub(/\s+/,' ').gsub(/(M\.[ICAG]|L\.A|I\.Q|ING|FIS|MTRO|MRTO|DRA?)\.?$/,"")
-          b = profesor[1].chomp.upcase.gsub(/\s+/,' ').gsub(/(M\.[ICAG]|L\.A|I\.Q|ING|FIS|MTRO|MRTO|DRA?)\.?$/,"")
+#          a = p_name.chomp.upcase.gsub(/\s+/,' ').gsub(/(M\.[ICAG]|L\.A|I\.Q|ING|FIS|MTRO|MRTO|DRA?)\.?$/,"")
+#          b = profesor[1].chomp.upcase.gsub(/\s+/,' ').gsub(/(M\.[ICAG]|L\.A|I\.Q|ING|FIS|MTRO|MRTO|DRA?)\.?$/,"")
+          a = strip_title_tag(p_name)
+          b = strip_title_tag(profesor[1])
+
           if (a.start_with?(b))
             rfc = profesor[0][0,9]
             p_name = b
@@ -402,16 +464,16 @@ module XNAS
         found = profesor_find(ldap,normalize(p_name),treebase)
         # Sinche the returned elements are multivalued, the symbols point to arrays :|
         rfc = found[:uid][0].to_s unless (found.nil? or found[:uid].nil? or found[:uid].empty?)
-        puts "! (rfc = nil)" + found.inspect if (rfc.nil?)
         p_name = normalize(found[:description][0].to_s) unless (found.nil? or found[:description].nil? or found[:description].empty?)
         bad << i if (rfc.nil? or rfc.empty?)
+        failed.write([ id, grupo, materia, rfc , p_name ].join(",")+"\n") if (rfc.nil? or rfc.empty?)
         #puts row.inspect if (rfc.nil? or rfc.empty?)
         next if (rfc.nil? or rfc.empty?)
 
         # Put row into array
         materias[i] = [ id, grupo, materia, rfc , p_name ]
         #mat[:id] => { :name => materia , :group => grupo , :rfc => rfc }
-
+        output.write(materias[i].join(",")+"\n") unless (materias[i].nil?)
         group_of_names_cn = id + "-" + grupo + "-" + rfc
         #group_of_names_cn = materias[i][3] + "-" + materias[i][0] + "-" + materias[i][1]
         group_of_names_dn = "cn=" + group_of_names_cn + "," + "ou=webdav,ou=groups" + "," + treebase
@@ -435,14 +497,17 @@ module XNAS
         ldap.add( :dn => group_of_names_dn , :attributes => group_of_names_attributes)
         print_result(ldap.get_operation_result.code,group_of_names_dn,rfc)
       end
+
     end
+    output.close
+    failed.close
   end
 
   def group_find(ldap,m_id,g_id,treebase)
     m_id = normalize(m_id)
     g_id = normalize(g_id)
     filter = "(&(objectClass=groupOfNames)(cn=#{m_id}-#{g_id}-*))"
-    puts "? #{m_id}-#{g_id} => #{filter}"
+    puts "? #{m_id}-#{g_id} => #{filter}" if (DEBUG)
     # Run a tree search of all matching elements and map them into a hash
     found = ldap.search(
       :base => "ou=webdav,ou=groups" + "," + treebase,
@@ -477,7 +542,8 @@ module XNAS
       #name = []
       profesores.each do |profesor|
         # normalize string and split into words
-        name = profesor[1].chomp.upcase.gsub(/\s+/,' ').gsub(/(M\.[ICAG]|L\.A|I\.Q|ING|FIS|MTRO|MRTO|DRA?)\.?$/,"").split(" ")
+        #name = profesor[1].chomp.upcase.gsub(/\s+/,' ').gsub(/(M\.[ICAG]|L\.A|I\.Q|ING|FIS|MTRO|MRTO|DRA?)\.?$/,"").split(" ")
+        name = strip_title_tag(profesor[1]).split(" ")
         # match the known name against a regular expression
         if (name.length >= 5)
           regex = Regexp.new("^"+name[0]+" "+name[1]+" "+name[2]+" "+name[3]+" "+name[4])
@@ -501,32 +567,45 @@ module XNAS
 
 ########  ./alumnos.rb
 
-  def alumnos_load(ldap,file)
+  def alumnos_load(ldap,file,out,err)
     treebase     = "dc=xnas,dc=local"
     account_ou    = "ou=alumnos,ou=users" + "," + treebase
     employee_type = "alumno"
     user_password = "thesis"
     mail = "nobody@localhost"
 
-
     current = last = nil
 
     alumnos = []
     i=0
 
+    output = open(out,'w')
+    output.truncate(0)
+    output.write("CUENTA,NOMBRE,CORREO,ASIGNATURA,NUMERO\n")
+
+    failed = open(err,'w')
+    failed.truncate(0)
+    failed.write("CUENTA,NOMBRE,CORREO,ASIGNATURA,NUMERO\n")
     CSV.foreach(file) do |row|
       num_cta, name, mail, id_materia, id_grupo = row
       next if num_cta == "CUENTA"
-      name = XNAS.normalize(name)
-      alumnos[i] = [num_cta, name, mail, id_materia, id_grupo]
-      # skip same employeeNumber
-#      next if num_cta == last
-      i+=1
+      last = current
+      current = num_cta
       common_name  = num_cta
-      display_name = XNAS.get_display_name(name)
+      account_dn = "cn=" + common_name + "," + account_ou
+      if /\W/.match(strip_accents(name).gsub(/[\s_-]+/,""))
+        print_result(-1,account_dn,common_name)
+        failed.write([num_cta, name, mail, id_materia, id_grupo,/\W/.match(name.gsub(/[\s_-]+/,""))].join(",")+"\n")
+      end
+      next if /\W/.match(strip_accents(name).gsub(/[\s_-]+/,""))
+      name = normalize(name)
+      alumnos[i] = [num_cta, name, mail, id_materia, id_grupo]
+      output.write(alumnos[i].join(",")+"\n")
+      i+=1
+
+      display_name = get_display_name(name)
       last = num_cta
 
-      account_dn = "cn=" + common_name + "," + account_ou
       account_attributes =
       {
         :objectclass =>
@@ -546,20 +625,25 @@ module XNAS
         :userPassword   => user_password
       }
 
-      #puts YAML::dump(accountAttributes)
-      ldap.add( :dn => account_dn , :attributes => account_attributes )
-      print_result(ldap.get_operation_result.code,account_dn,common_name)
+      # skip same employeeNumber
+      #unless (last == current)
+        #puts YAML::dump(accountAttributes)
+        ldap.add( :dn => account_dn , :attributes => account_attributes )
+        print_result(ldap.get_operation_result.code,account_dn,common_name)
+      #end
 
       if (valid_status(ldap.get_operation_result.code))
         # Add account to group when return code is 0 or 20
-        group_of_names_dn = XNAS.group_find(ldap,id_materia,id_grupo,treebase)
+        group_of_names_dn = group_find(ldap,id_materia,id_grupo,treebase)
         group_of_names_attribute = "member"
         #puts YAML::dump([group_of_names_dn , group_of_names_attribute, account_dn])
         unless (group_of_names_dn.nil? or group_of_names_dn.empty?)
           ldap.add_attribute( group_of_names_dn[:dn] , :member , account_dn)
-          print_result(ldap.get_operation_result.code,group_of_names_dn[:dn],num_cta)
+          print_result(ldap.get_operation_result.code,group_of_names_dn[:dn],num_cta,group_of_names_attribute)
         end
       end
     end
+    output.close
+    failed.close
   end
 end
