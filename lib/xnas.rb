@@ -14,6 +14,8 @@ require 'rubygems'
 require 'net/ldap'
 require 'digest/sha1'
 require 'base64'
+require 'fileutils'
+require 'json'
 
 ########	class
 
@@ -21,8 +23,8 @@ module XNAS
   extend self
   ########	vars
 
-  VERBOSE = false
-  DEBUG = false
+  VERBOSE = true
+  DEBUG   = true
 
   ########	def
 
@@ -138,7 +140,7 @@ module XNAS
     return [i,t]
   end
 
-  ########  staff
+  ########	staff
 
   def staff_load(ldap,filename,out,err)
     number = 10000
@@ -231,7 +233,7 @@ module XNAS
     failed.close
   end
 
-  ########  profesor
+  ########	profesor
 
   def profesor_load(ldap,filename,out,err)
     number = 20000 + 1
@@ -332,6 +334,9 @@ module XNAS
             ldap.delete( :dn => posix_account_dn )
             ldap.delete( :dn => posix_group_dn )
           end
+          
+          # profesor posixAccount and posixGroup added, we might now add apache rw conf
+          conf_rw("/opt/xNAS/files",rfc,common_name)
       end
 
       number+=1
@@ -362,7 +367,7 @@ module XNAS
     return found[0]
   end
 
-########  materia
+  ########	materia
 
   def valid_group(p_name)
     invalid_names = ["POR ASIGNAR PROFESOR","CONTACTAR A LA DIVISION CORRESPONDIENTE GRUPO CANCELADO CANC"]
@@ -400,6 +405,9 @@ module XNAS
     failed = open(err,'w')
     failed.truncate(0)
     failed.write("ID,GRUPO,MATERIA,RFC,PROFESOR\n")
+
+    directories = open("mkdir.log","w+")
+    directories.truncate(0)
 
     # Parse CSV file
     CSV.foreach(file) do |row|
@@ -496,11 +504,15 @@ module XNAS
         #puts YAML::dump([group_of_names_dn , group_of_names_attributes]) if (DEBUG)
         ldap.add( :dn => group_of_names_dn , :attributes => group_of_names_attributes)
         print_result(ldap.get_operation_result.code,group_of_names_dn,rfc)
+        
+        # materia added so far, we might now add ro config
+        conf_ro("/opt/xNAS/files",grupo,p_name,id)
+        mkdir(directories,"/opt/xNAS/files",p_name,grupo,id)
       end
-
     end
     output.close
     failed.close
+    directories.close
   end
 
   def group_find(ldap,m_id,g_id,treebase)
@@ -565,7 +577,8 @@ module XNAS
     end
   end
 
-########  ./alumnos.rb
+  ########	alumnos
+
 
   def alumnos_load(ldap,file,out,err)
     treebase     = "dc=xnas,dc=local"
@@ -646,4 +659,119 @@ module XNAS
     output.close
     failed.close
   end
+
+  ########	apache
+
+
+  def conf_ro(prefix,m_group_dn,p_dir,m_dir)
+    output = "apache_ro.conf"
+    output = open(output,'a+')
+    output.write("
+    <Directory #{prefix}/p/#{p_dir}/#{m_dir}/>
+      # Inherits Dav On
+      #AllowOverride AuthConfig Limit
+      Include extra/ldap-auth-ro.conf
+      Satisfy ALL
+      Require ldap-group #{m_group_dn}
+      <LimitExcept GET OPTIONS PROPFIND>
+        Order Allow,Deny
+        Deny From ALL
+      </LimitExcept>
+    </Directory>
+    ")
+    puts "+ ro	#{prefix}/p/#{p_dir}/#{m_dir}		#{m_group_dn}" if (VERBOSE)
+    # must close file descriptor somehow
+  end
+
+  def conf_rw(prefix,p_id,p_dir)
+    output = "apache_rw.conf"
+    output = open(output,'a+')
+    output.write("
+    <Directory #{prefix}/profesor/#{p_dir}/>
+      # Inherits Dav On
+      Include extra/ldap-auth-rw.conf
+      AllowOverride AuthConfig Limit
+      Options +Indexes
+      Satisfy ALL
+      Require ldap-user #{p_id}
+      <LimitExcept GET OPTIONS PROPFIND>
+        Satisfy ALL
+        Require ldap-user #{p_id}
+      </LimitExcept>
+    </Directory>
+    ")
+    puts "+ rw	#{prefix}/profesor/#{p_dir}		#{p_id}" if (VERBOSE)
+    # must close file descriptor somehow
+  end
+
+  ########	home
+
+  def mkdir(output,prefix,p_dir,m_id="",g_id="")
+    target = "#{prefix}/profesor/#{p_dir}"
+    target = "#{target}/#{m_id}" unless (m_id.nil? or m_id.empty?)
+    target = "#{target}/#{g_id}" unless (g_id.nil? or g_id.empty?)
+    output.write("mkdir -vp #{target}\n")
+    FileUtils.mkdir_p "#{target}"
+    puts "mkdir -vp #{target}" if (VERBOSE)
+  end
+  
+  ########	json
+
+  def json_tree(input,output)
+    output = open(output,'w+')
+    output.truncate(0)
+    data = []
+
+    #parsed_file = CSV.read($stdin, { :col_sep => "\t" })
+    CSV.foreach(input, { :col_sep => "\t" }) do |row|
+      # Retrieve elements as returned from command
+      level, path, dir = row
+      # Iterate on each element of the path
+      data << { "id" => path+"/"+dir , "parent" => path , "name" => dir }
+    end
+    # output JSON payload
+    output.write data.to_json
+  end
+  
+  def json_tree_label(input,output)
+    output = open(output,'w+')
+    output.truncate(0)
+    data = {}
+
+    #parsed_file = CSV.read($stdin, { :col_sep => "\t" })
+    CSV.foreach(input, { :col_sep => "\t" }) do |row|
+      # Retrieve elements as returned from command
+      level, path, dir = row
+      # Split into path elements
+      path = path.split("/")
+      # Remove first element "."
+      path.shift
+      # Iterate on each element of the path
+      case path.length
+        when 0
+        when 1
+          if !(data.has_key? path[0])
+             data[path[0]] = {}
+          end
+        when 2
+          if !(data[path[0]].has_key? path[1])
+             data[path[0]][path[1]] = {}
+          end
+        when 3
+          if !(data[path[0]][path[1]].has_key? path[2])
+             data[path[0]][path[1]][path[2]] = {}
+          end
+        when 4
+          if !(data[path[0]][path[1]][path[2]].has_key? path[3])
+             data[path[0]][path[1]][path[2]][path[3]] = []
+          end
+             data[path[0]][path[1]][path[2]][path[3]] << dir
+        # Do nothing if no condition is met
+        else
+      end
+    end
+    # output JSON payload
+    output.write data.to_json
+  end
+
 end
