@@ -6,6 +6,11 @@
 # Library defined thanks to this theory in ruby semantics
 # => http://ozmm.org/posts/singin_singletons.html
 # => http://blog.bigbinary.com/2012/06/28/extend-self-in-ruby.html
+
+# requirements
+# aptitude install ruby rubygems
+# gem install net-ldap
+
 ########	require
 
 require 'yaml'
@@ -164,6 +169,9 @@ module XNAS
     failed.truncate(0)
     failed.write("usuario,Nombre,correo,CURP\n")
 
+    directories = open("mkdir.log","w+")
+    directories.truncate(0)
+
     posix_group_dn = "cn=support,ou=unix,ou=groups" + "," + treebase
     posix_group_attributes =
     {
@@ -223,14 +231,19 @@ module XNAS
       if (valid_status(ldap.get_operation_result.code))
         ldap.add_attribute(posixGroupDN, :memberUid, commonName)
         print_result(ldap.get_operation_result.code,posixGroupDN,commonName,posixGroupAttribute)
-        # rollback
-        ldap.delete( :dn => posixAccountDN ) unless (valid_status(ldap.get_operation_result.code))
+        if (valid_status(ldap.get_operation_result.code))
+          mkdir(directories,"/opt/xNAS/files","staff",commonName)
+        else
+          # rollback
+          ldap.delete( :dn => posixAccountDN )
+        end
       end
 
       number+=1
     end
     output.close
     failed.close
+    directories.close
   end
 
   ########	profesor
@@ -406,8 +419,7 @@ module XNAS
     failed.truncate(0)
     failed.write("ID,GRUPO,MATERIA,RFC,PROFESOR\n")
 
-    directories = open("mkdir.log","w+")
-    directories.truncate(0)
+    directories = open("mkdir.log","a+")
 
     # Parse CSV file
     CSV.foreach(file) do |row|
@@ -507,7 +519,7 @@ module XNAS
         
         # materia added so far, we might now add ro config
         conf_ro("/opt/xNAS/files",grupo,p_name,id)
-        mkdir(directories,"/opt/xNAS/files",p_name,grupo,id)
+        mkdir(directories,"/opt/xNAS/files","profesor",p_name,grupo,id)
       end
     end
     output.close
@@ -705,9 +717,8 @@ module XNAS
   end
 
   ########	home
-
-  def mkdir(output,prefix,p_dir,m_id="",g_id="")
-    target = "#{prefix}/profesor/#{p_dir}"
+  def mkdir(output,prefix,type,p_dir,m_id="",g_id="")
+    target = "#{prefix}/#{type}/#{p_dir}"
     target = "#{target}/#{m_id}" unless (m_id.nil? or m_id.empty?)
     target = "#{target}/#{g_id}" unless (g_id.nil? or g_id.empty?)
     output.write("mkdir -vp #{target}\n")
