@@ -3,6 +3,8 @@
 
 SHELL=/bin/bash
 
+PREFIX=/opt/xNAS/files
+
 run:	
 	reset
 	time ($(MAKE) init 2>&1 | tee make.log)
@@ -28,3 +30,7 @@ init:	gem clean
 alumnos:	gem
 	./alumnos.rb
 
+json:
+	cd $(PREFIX) ; \
+	find ./ -maxdepth 5 -type d -printf "%d\t%h\t%f\n" | sort -g | tee find.data ;
+	./json.rb
