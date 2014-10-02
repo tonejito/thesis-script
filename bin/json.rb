@@ -2,7 +2,23 @@
 # encoding: utf-8
 # vim : filetype=ruby
 
-payload="/opt/xNAS/files/find.data"
+require 'xnas'
 
-XNAS.json_tree(payload,"jqxTree.json")
-XNAS.json_tree_label(payload,"jqxListMenu.json")
+payload="../find.data"
+
+ldap = Net::LDAP.new \
+:host => "thesis",
+:port => 389,
+:auth =>
+{
+  :method => :simple,
+  :username => "cn=admin" + "," + "dc=xnas,dc=local",
+  :password => "thesis",
+}
+
+# This script *requires* connection to the ldap server
+exit unless(ldap.bind)
+
+XNAS.json_jqwxlistmenu(payload,"jqxListMenu.json",ldap)
+#XNAS.json_tree(payload,"jqxListMenu.json",ldap)
+#XNAS.json_tree_label(payload,"jqxTree.json",ldap))

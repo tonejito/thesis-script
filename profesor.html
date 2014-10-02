@@ -30,21 +30,21 @@
       margin-right: auto;
     }
   </style>
-  <link type="text/css" rel="stylesheet" href="/jqwidgets/styles/jqx.base.css" />
-  <script type="text/javascript" src="/scripts/jquery-1.10.2.min.js"></script>
-  <script type="text/javascript" src="/scripts/demos.js"></script>
-  <script type="text/javascript" src="/jqwidgets/jqxcore.js"></script>
-  <script type="text/javascript" src="/jqwidgets/jqxdata.js"></script>
-  <script type="text/javascript" src="/jqwidgets/jqxbuttons.js"></script>
-  <script type="text/javascript" src="/jqwidgets/jqxscrollbar.js"></script>
-  <script type="text/javascript" src="/jqwidgets/jqxpanel.js"></script>
-  <script type="text/javascript" src="/jqwidgets/jqxtree.js"></script>
-  <script type="text/javascript" src="/jqwidgets/jqxexpander.js"></script>
-  <script type="text/javascript" src="/jqwidgets/jqxlistbox.js"></script>
-  <script type="text/javascript" src="/jqwidgets/jqxlistmenu.js"></script>
-  <script type="text/javascript" src="/jqwidgets/jqxtabs.js"></script>
-  <script type="text/javascript" src="/jqwidgets/jqxdockpanel.js"></script>
-  <script type="text/javascript" src="/jqwidgets/jqxtooltip.js"></script>
+  <link type="text/css" rel="stylesheet" href="/assets/jqwidgets/styles/jqx.base.css" />
+  <script type="text/javascript" src="/assets/scripts/jquery-1.10.2.min.js"></script>
+<!--  <script type="text/javascript" src="/assets/scripts/demos.js"></script>-->
+  <script type="text/javascript" src="/assets/jqwidgets/jqxcore.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxbuttons.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxscrollbar.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxpanel.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxtree.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxexpander.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxlistbox.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxlistmenu.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxtabs.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxdockpanel.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxtooltip.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxdata.js"></script>
   <script type="text/javascript">
 (
  function()
@@ -82,58 +82,41 @@ $(document).ready
   );
 
   // Receive JSON payload
-  var target = "/data.json.0";
+  //var target = "/data.json.0";
+  //var target = "/profesor.data.tree.json";
+  var target = "/jqxListMenu.json";
   var items = [];
 
-  /***
-  * NOTE: This code is rather ugly and might seem easy to convert it to
-  * a recursive fashion. I tried for 6 hours to find a way to make it
-  * recursive and I couldn't find a solution.
-  *	T - T
-  ***/
   // Iterate on each parsed JSON element
   $.getJSON(target).done
   (
    function(data)
    {
     items.push('<ul id="jqxListMenu" data-role="listmenu">' + '\n');
+    //console.log("profesor",data["profesor"]);
     $.each
     (
-     data,
-     function(k,p)
+     data["profesor"],
+     function(p_name,m_items)
      {
-      items.push('<li>' + k + '<ul data-role="listmenu">');
+      //console.log("p_name",p_name,"m_items",m_items);
+      items.push('<li>' + p_name + '<ul data-role="listmenu">');
       $.each
       (
-       p,
-       function(p1,m)
+       m_items,
+       function(m_id,m_data)
        {
-        items.push('<li>' + p1 + '<ul data-role="listmenu">');
+        //console.log("mid:",m_id,"m_data",m_data);
+        console.log("label",m_data["label"])
+        items.push('<li>' + m_data["label"] + '<ul data-role="listmenu">');
         $.each
         (
-         m,
-         function(m1,y)
+         m_data["groups"],
+         function(index,value)
          {
-          items.push('<li>' + m1 + '<ul data-role="listmenu">');
-          $.each
-          (
-           y,
-           function(y1,g)
-           {
-            items.push('<li>' + y1 + '<ul data-role="listmenu">');
-            $.each
-            (
-             g,
-             function(g1,grp)
-             {
-              var path = "/"+k+"/"+p1+"/"+m1+"/"+y1+"/"+grp+"/";
-              items.push('<li>' + '<a href="'+path+'">'+grp+'</a>' + '</li>');
-             }
-            )
-            items.push('</ul>' + '</li>');
-           }
-          )
-          items.push('</ul>' + '</li>');
+          console.log(index,value);
+          var path = "/"+"profesor"+"/"+p_name+"/"+m_id+"/"+value+"/";
+          items.push('<li>' + '<a href="'+path+'">'+value+'</a>' + '</li>');
          }
         )
         items.push('</ul>' + '</li>');
@@ -163,7 +146,9 @@ $(document).ready
   ); // getJSON
 /**/
   // Receive JSON payload
-  var target = "/data.json";
+  //var target = "/data.json";
+  //var target = "/profesor.data.json";
+  var target = "/jqxTree.json";
   // Iterate on each parsed JSON element
   $.getJSON(target).done
   (

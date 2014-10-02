@@ -376,7 +376,7 @@ module XNAS
       :return_result => true)
     #puts YAML::dump(found)
     puts "? #{name} => #{filter}" if (VERBOSE)
-    puts "=> #{found}" if (DEBUG)
+    #puts "=> #{found}" if (DEBUG)
     return found[0]
   end
 
@@ -388,6 +388,19 @@ module XNAS
       return false if p_name == n
     end
     return true
+  end
+
+  def materias_find(ldap,name,treebase)
+    name = normalize(name)
+    filter = "(&(objectClass=organizationalRole)(cn=#{name}))"
+    # Run a tree search of all profesors and map them into a hash
+    found = ldap.search(
+      :base => "ou=materias" + "," + treebase,
+      :filter => filter,
+      :attributes => ["dn","cn","description"],
+      :return_result => true)
+    #$stderr.puts "? #{name} => #{filter}" if (VERBOSE)
+    return found[0]
   end
 
   def materias_load(ldap,file,out,err)
@@ -519,7 +532,7 @@ module XNAS
         
         # materia added so far, we might now add ro config
         conf_ro("/opt/xNAS/files",grupo,p_name,id)
-        mkdir(directories,"/opt/xNAS/files","profesor",p_name,grupo,id)
+        mkdir(directories,"/opt/xNAS/files","profesor",p_name,id,grupo)
       end
     end
     output.close
@@ -691,7 +704,7 @@ module XNAS
       </LimitExcept>
     </Directory>
     ")
-    puts "+ ro	#{prefix}/p/#{p_dir}/#{m_dir}		#{m_group_dn}" if (VERBOSE)
+    puts "+ [ro]	#{prefix}/p/#{p_dir}/#{m_dir}		#{m_group_dn}" if (VERBOSE)
     # must close file descriptor somehow
   end
 
@@ -712,7 +725,7 @@ module XNAS
       </LimitExcept>
     </Directory>
     ")
-    puts "+ rw	#{prefix}/profesor/#{p_dir}		#{p_id}" if (VERBOSE)
+    puts "+ [rw]	#{prefix}/profesor/#{p_dir}		#{p_id}" if (VERBOSE)
     # must close file descriptor somehow
   end
 
@@ -725,10 +738,10 @@ module XNAS
     FileUtils.mkdir_p "#{target}"
     puts "mkdir -vp #{target}" if (VERBOSE)
   end
-  
+
   ########	json
 
-  def json_tree(input,output)
+  def json_tree_label(input,output)
     output = open(output,'w+')
     output.truncate(0)
     data = []
@@ -742,9 +755,10 @@ module XNAS
     end
     # output JSON payload
     output.write data.to_json
+    output.close
   end
-  
-  def json_tree_label(input,output)
+
+  def json_tree(input,output,ldap)
     output = open(output,'w+')
     output.truncate(0)
     data = {}
@@ -760,29 +774,96 @@ module XNAS
       # Iterate on each element of the path
       case path.length
         when 0
+          # type
         when 1
-          if !(data.has_key? path[0])
+          # user
+          unless (data.has_key? path[0])
              data[path[0]] = {}
           end
         when 2
-          if !(data[path[0]].has_key? path[1])
+          # subject
+          unless (data[path[0]].has_key? path[1])
              data[path[0]][path[1]] = {}
           end
         when 3
-          if !(data[path[0]][path[1]].has_key? path[2])
-             data[path[0]][path[1]][path[2]] = {}
+          # group
+          unless (data[path[0]][path[1]].has_key? path[2])
+             #data[path[0]][path[1]][path[2]] = {}
+             data[path[0]][path[1]][path[2]] = []
           end
-        when 4
-          if !(data[path[0]][path[1]][path[2]].has_key? path[3])
-             data[path[0]][path[1]][path[2]][path[3]] = []
-          end
-             data[path[0]][path[1]][path[2]][path[3]] << dir
+             found = materias_find(ldap,dir,"dc=xnas,dc=local")
+             puts found[:description][0].inspect unless (found.nil?)
+             data[path[0]][path[1]][path[2]] << dir
+#        when 4
+#          unless (data[path[0]][path[1]][path[2]].has_key? path[3])
+#             data[path[0]][path[1]][path[2]][path[3]] = []
+#          end
+#             puts "4 #{dir}"
+#             data[path[0]][path[1]][path[2]][path[3]] << dir
         # Do nothing if no condition is met
         else
       end
     end
     # output JSON payload
+    #puts data.inspect
     output.write data.to_json
+    output.close
+  end
+
+  def json_jqwxlistmenu(input,output,ldap)
+    #output = open(output,'w+')
+    #output.truncate(0)
+    data = {}
+
+    #parsed_file = CSV.read($stdin, { :col_sep => "\t" })
+    CSV.foreach(input, { :col_sep => "\t" }) do |row|
+      # Retrieve elements as returned from command
+      level, path, dir = row
+      # Split into path elements
+      path = path.split("/")
+      # Remove first element "."
+      path.shift
+      # Iterate on each element of the path
+      case path.length
+        when 0
+          # root
+        when 1
+          # type
+          $stderr.puts path[0] if (DEBUG)
+          unless (data.has_key? path[0])
+             data[path[0]] = {}
+          end
+        when 2
+          # user
+          $stderr.puts "  " + path[1] if (DEBUG)
+          unless (data[path[0]].include? path[1])
+             data[path[0]][path[1]] = {}
+          end
+
+        when 3
+          # subject
+          found = materias_find(ldap,path[2],"dc=xnas,dc=local")
+          $stderr.puts "    " + path[2] + "\t" + found[:description][0] if (DEBUG)
+          if (data[path[0]][path[1]][path[2]].nil?)
+             $stderr.puts "      > #{dir}" if (DEBUG)
+             data[path[0]][path[1]][path[2]] = {"label"=>found[:description][0],"groups"=>[]}
+          end
+             data[path[0]][path[1]][path[2]]["groups"] << dir
+#        when 4
+#          # group
+#          $stderr.puts "      " + path[3] if (DEBUG)
+#          unless (data[path[0]][path[1]][path[2]].has_key? path[3])
+#             data[path[0]][path[1]][path[2]][path[3]] = []
+#          end
+#             data[path[0]][path[1]][path[2]][path[3]] << dir
+        # Do nothing if no condition is met
+        else
+      end
+    end
+    # output JSON payload
+    puts data.to_json
+    #output.write data.to_json
+    #output.close
   end
 
 end
