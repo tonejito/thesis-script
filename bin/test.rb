@@ -52,8 +52,8 @@ payload =
   :a =>
   {
     :except => ["CUENTA"],
-    :filename => ["../alumnos-fail.csv","alumnos.stdout.csv","alumnos.stderr.csv"],
-#    :filename => ["../alumnos.csv","alumnos.stdout.csv","alumnos.stderr.csv"],
+#    :filename => ["../alumnos-fail.csv","alumnos.stdout.csv","alumnos.stderr.csv"],
+    :filename => ["../alumnos.csv","alumnos.stdout.csv","alumnos.stderr.csv"],
     :values => [],
     :total => [],
   },
@@ -62,9 +62,9 @@ payload =
 # This script *requires* connection to the ldap server
 exit unless(ldap.bind)
 
-#XNAS.staff_load(ldap,payload[:s][:filename][0],payload[:s][:filename][1],payload[:s][:filename][2])
-#XNAS.profesor_load(ldap,payload[:p][:filename][0],payload[:p][:filename][1],payload[:p][:filename][2])
-#XNAS.materias_load(ldap,payload[:m][:filename][0],payload[:m][:filename][1],payload[:m][:filename][2])
+XNAS.staff_load(ldap,payload[:s][:filename][0],payload[:s][:filename][1],payload[:s][:filename][2])
+XNAS.profesor_load(ldap,payload[:p][:filename][0],payload[:p][:filename][1],payload[:p][:filename][2])
+XNAS.materias_load(ldap,payload[:m][:filename][0],payload[:m][:filename][1],payload[:m][:filename][2])
 XNAS.alumnos_load(ldap,payload[:a][:filename][0],payload[:a][:filename][1],payload[:a][:filename][2])
 
 # Get the read / written values and print them

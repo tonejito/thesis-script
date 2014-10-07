@@ -93,30 +93,25 @@ $(document).ready
    function(data)
    {
     items.push('<ul id="jqxListMenu" data-role="listmenu">' + '\n');
-    //console.log("profesor",data["profesor"]);
     $.each
     (
      data["profesor"],
      function(p_name,m_items)
      {
-      //console.log("p_name",p_name,"m_items",m_items);
       items.push('<li>' + p_name + '<ul data-role="listmenu">');
       $.each
       (
        m_items,
        function(m_id,m_data)
        {
-        //console.log("mid:",m_id,"m_data",m_data);
-        console.log("label",m_data["label"])
         items.push('<li>' + m_data["label"] + '<ul data-role="listmenu">');
         $.each
         (
          m_data["groups"],
          function(index,value)
          {
-          console.log(index,value);
           var path = "/"+"profesor"+"/"+p_name+"/"+m_id+"/"+value+"/";
-          items.push('<li>' + '<a href="'+path+'">'+value+'</a>' + '</li>');
+          items.push('<li>' + '<a href="'+path+'">'+'Grupo '+value+'</a>' + '</li>');
          }
         )
         items.push('</ul>' + '</li>');
@@ -144,7 +139,7 @@ $(document).ready
     );
    } // function(data)
   ); // getJSON
-/**/
+/*
   // Receive JSON payload
   //var target = "/data.json";
   //var target = "/profesor.data.json";
@@ -231,7 +226,7 @@ $(document).ready
     );
    } // function(data)
   ); // getJSON
-/**/
+*/
  }
 )
   </script>
@@ -252,7 +247,7 @@ $(document).ready
          </div>
          <div class="content">
            <div id='jqxExpander' class="container">
-             <div id='Header' class="header">damn MSIE</div>
+             <div id='Header' class="header"></div>
              <div id='jqxTree'></div>
            </div>
          </div>

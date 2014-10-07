@@ -399,7 +399,8 @@ module XNAS
       :filter => filter,
       :attributes => ["dn","cn","description"],
       :return_result => true)
-    #$stderr.puts "? #{name} => #{filter}" if (VERBOSE)
+    $stderr.puts "? #{name} => #{filter}" if (VERBOSE)
+    $stderr.puts found.inspect
     return found[0]
   end
 
@@ -740,12 +741,10 @@ module XNAS
   end
 
   ########	json
-
-  def json_tree_label(input,output)
+  def json_jqxtree(input,output)
     output = open(output,'w+')
     output.truncate(0)
     data = []
-
     #parsed_file = CSV.read($stdin, { :col_sep => "\t" })
     CSV.foreach(input, { :col_sep => "\t" }) do |row|
       # Retrieve elements as returned from command
@@ -758,63 +757,10 @@ module XNAS
     output.close
   end
 
-  def json_tree(input,output,ldap)
+  def json_jqxlistmenu(input,output,ldap)
     output = open(output,'w+')
     output.truncate(0)
     data = {}
-
-    #parsed_file = CSV.read($stdin, { :col_sep => "\t" })
-    CSV.foreach(input, { :col_sep => "\t" }) do |row|
-      # Retrieve elements as returned from command
-      level, path, dir = row
-      # Split into path elements
-      path = path.split("/")
-      # Remove first element "."
-      path.shift
-      # Iterate on each element of the path
-      case path.length
-        when 0
-          # type
-        when 1
-          # user
-          unless (data.has_key? path[0])
-             data[path[0]] = {}
-          end
-        when 2
-          # subject
-          unless (data[path[0]].has_key? path[1])
-             data[path[0]][path[1]] = {}
-          end
-        when 3
-          # group
-          unless (data[path[0]][path[1]].has_key? path[2])
-             #data[path[0]][path[1]][path[2]] = {}
-             data[path[0]][path[1]][path[2]] = []
-          end
-             found = materias_find(ldap,dir,"dc=xnas,dc=local")
-             puts found[:description][0].inspect unless (found.nil?)
-             data[path[0]][path[1]][path[2]] << dir
-#        when 4
-#          unless (data[path[0]][path[1]][path[2]].has_key? path[3])
-#             data[path[0]][path[1]][path[2]][path[3]] = []
-#          end
-#             puts "4 #{dir}"
-#             data[path[0]][path[1]][path[2]][path[3]] << dir
-        # Do nothing if no condition is met
-        else
-      end
-    end
-    # output JSON payload
-    #puts data.inspect
-    output.write data.to_json
-    output.close
-  end
-
-  def json_jqwxlistmenu(input,output,ldap)
-    #output = open(output,'w+')
-    #output.truncate(0)
-    data = {}
-
     #parsed_file = CSV.read($stdin, { :col_sep => "\t" })
     CSV.foreach(input, { :col_sep => "\t" }) do |row|
       # Retrieve elements as returned from command
@@ -839,31 +785,23 @@ module XNAS
           unless (data[path[0]].include? path[1])
              data[path[0]][path[1]] = {}
           end
-
         when 3
           # subject
           found = materias_find(ldap,path[2],"dc=xnas,dc=local")
           $stderr.puts "    " + path[2] + "\t" + found[:description][0] if (DEBUG)
+          next if (found.nil?)
           if (data[path[0]][path[1]][path[2]].nil?)
              $stderr.puts "      > #{dir}" if (DEBUG)
              data[path[0]][path[1]][path[2]] = {"label"=>found[:description][0],"groups"=>[]}
           end
-             data[path[0]][path[1]][path[2]]["groups"] << dir
-#        when 4
-#          # group
-#          $stderr.puts "      " + path[3] if (DEBUG)
-#          unless (data[path[0]][path[1]][path[2]].has_key? path[3])
-#             data[path[0]][path[1]][path[2]][path[3]] = []
-#          end
-#             data[path[0]][path[1]][path[2]][path[3]] << dir
+          data[path[0]][path[1]][path[2]]["groups"] << dir
         # Do nothing if no condition is met
         else
       end
     end
     # output JSON payload
-    puts data.to_json
-    #output.write data.to_json
-    #output.close
+    output.write data.to_json
+    output.close
   end
 
 end

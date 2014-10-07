@@ -18,7 +18,6 @@ ldap = Net::LDAP.new \
 
 # This script *requires* connection to the ldap server
 exit unless(ldap.bind)
-
-XNAS.json_jqwxlistmenu(payload,"jqxListMenu.json",ldap)
-#XNAS.json_tree(payload,"jqxListMenu.json",ldap)
-#XNAS.json_tree_label(payload,"jqxTree.json",ldap))
+# Convert the find payload to json
+XNAS.json_jqxlistmenu(payload,"jqxListMenu.json",ldap)
+XNAS.json_jqxtree(payload,"jqxTree.json")

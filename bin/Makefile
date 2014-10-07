@@ -35,7 +35,7 @@ json:	gem
 	find ./ -maxdepth 5 -type d -printf "%d\t%h\t%f\n" | sort -g | tee find.data ;
 	./json.rb
 
-pretty-json:
+pretty-json:	json
 	mv jqxTree.json jqxTree.1.json
 	python -m json.tool jqxTree.1.json > jqxTree.json
 	rm jqxTree.1.json
