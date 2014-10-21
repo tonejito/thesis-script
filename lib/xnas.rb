@@ -25,7 +25,9 @@ require 'json'
 ########	class
 
 module XNAS
+
   extend self
+
   ########	vars
 
   VERBOSE = true
@@ -278,7 +280,7 @@ module XNAS
       next if rfc == "RFC"
       next if rfc == "SIN"
       name = get_name(strip_accents(name))
-      rfc = rfc[0,9]
+      rfc = rfc[0,10]
       mail = fallback_mail if (mail.nil? or mail.empty?)
       if /\W/.match(name.gsub(/[\s_-]+/,""))
         posix_account_dn = "uid=" + rfc + "," + posix_account_ou
@@ -489,7 +491,7 @@ module XNAS
           b = strip_title_tag(profesor[1])
 
           if (a.start_with?(b))
-            rfc = profesor[0][0,9]
+            rfc = profesor[0][0,10]
             p_name = b
           end
         end
@@ -688,7 +690,6 @@ module XNAS
 
   ########	apache
 
-
   def conf_ro(prefix,m_group_dn,p_dir,m_dir)
     output = "apache_ro.conf"
     output = open(output,'a+')
@@ -731,6 +732,7 @@ module XNAS
   end
 
   ########	home
+
   def mkdir(output,prefix,type,p_dir,m_id="",g_id="")
     target = "#{prefix}/#{type}/#{p_dir}"
     target = "#{target}/#{m_id}" unless (m_id.nil? or m_id.empty?)
@@ -741,6 +743,7 @@ module XNAS
   end
 
   ########	json
+
   def json_jqxtree(input,output)
     output = open(output,'w+')
     output.truncate(0)
