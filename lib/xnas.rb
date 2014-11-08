@@ -330,7 +330,7 @@ module XNAS
         ] ,
         :cn => rfc ,
         :gidNumber => number.to_s() ,
-        :memberuid => rfc
+        :memberuid => [ rfc , "andres" ],
       }
 
       #puts YAML::dump(posix_account_attributes) if (DEBUG)
@@ -510,7 +510,8 @@ module XNAS
         materias[i] = [ id, grupo, materia, rfc , p_name ]
         #mat[:id] => { :name => materia , :group => grupo , :rfc => rfc }
         output.write(materias[i].join(",")+"\n") unless (materias[i].nil?)
-        group_of_names_cn = id + "-" + grupo + "-" + rfc
+        #group_of_names_cn = id + "-" + grupo + "-" + rfc
+        group_of_names_cn = id + "-" + rfc
         #group_of_names_cn = materias[i][3] + "-" + materias[i][0] + "-" + materias[i][1]
         group_of_names_dn = "cn=" + group_of_names_cn + "," + "ou=webdav,ou=groups" + "," + treebase
         group_of_names_attributes =
@@ -534,7 +535,8 @@ module XNAS
         print_result(ldap.get_operation_result.code,group_of_names_dn,rfc)
         
         # materia added so far, we might now add ro config
-        conf_ro("/opt/xNAS/files",grupo,p_name,id)
+        #conf_ro("/opt/xNAS/files","#{id}-#{grupo}-#{rfc}",p_name,id,grupo)
+        conf_ro("/opt/xNAS/files","#{id}-#{rfc}",p_name,id,grupo)
         mkdir(directories,"/opt/xNAS/files","profesor",p_name,id,grupo)
       end
     end
@@ -543,11 +545,13 @@ module XNAS
     directories.close
   end
 
-  def group_find(ldap,m_id,g_id,treebase)
+  def group_find(ldap,m_id,treebase)
     m_id = normalize(m_id)
-    g_id = normalize(g_id)
-    filter = "(&(objectClass=groupOfNames)(cn=#{m_id}-#{g_id}-*))"
-    puts "? #{m_id}-#{g_id} => #{filter}" if (DEBUG)
+    #g_id = normalize(g_id)
+    #filter = "(&(objectClass=groupOfNames)(cn=#{m_id}-#{g_id}-*))"
+    filter = "(&(objectClass=groupOfNames)(cn=#{m_id}-*))"
+    #puts "? #{m_id}-#{g_id} => #{filter}" if (DEBUG)
+    puts "? #{m_id} => #{filter}" if (DEBUG)
     # Run a tree search of all matching elements and map them into a hash
     found = ldap.search(
       :base => "ou=webdav,ou=groups" + "," + treebase,
@@ -675,7 +679,8 @@ module XNAS
 
       if (valid_status(ldap.get_operation_result.code))
         # Add account to group when return code is 0 or 20
-        group_of_names_dn = group_find(ldap,id_materia,id_grupo,treebase)
+        #group_of_names_dn = group_find(ldap,id_materia,id_grupo,treebase)
+        group_of_names_dn = group_find(ldap,id_materia,treebase)
         group_of_names_attribute = "member"
         #puts YAML::dump([group_of_names_dn , group_of_names_attribute, account_dn])
         unless (group_of_names_dn.nil? or group_of_names_dn.empty?)
@@ -690,23 +695,26 @@ module XNAS
 
   ########	apache
 
-  def conf_ro(prefix,m_group_dn,p_dir,m_dir)
+  def conf_ro(prefix,m_group_cn,p_dir,m_dir,g_dir)
     output = "apache_ro.conf"
     output = open(output,'a+')
     output.write("
-    <Directory #{prefix}/p/#{p_dir}/#{m_dir}/>
+    # #{m_group_cn} - #{p_dir} - #{m_dir} - #{g_dir}
+    <Directory #{prefix}/p/#{p_dir}/#{m_dir}>
       # Inherits Dav On
       #AllowOverride AuthConfig Limit
-      Include extra/ldap-auth-ro.conf
+#      Include extra/ldap-auth-ro.conf
       Satisfy ALL
-      Require ldap-group #{m_group_dn}
+      Require ldap-group cn=#{m_group_cn},ou=webdav,ou=groups,dc=xnas,dc=local
       <LimitExcept GET OPTIONS PROPFIND>
+        Satisfy ALL
+        Require ldap-group _
         Order Allow,Deny
         Deny From ALL
       </LimitExcept>
     </Directory>
     ")
-    puts "+ [ro]	#{prefix}/p/#{p_dir}/#{m_dir}		#{m_group_dn}" if (VERBOSE)
+    puts "+ [ro]	#{prefix}/p/#{p_dir}/#{m_dir}		#{m_group_cn}" if (VERBOSE)
     # must close file descriptor somehow
   end
 
@@ -714,16 +722,16 @@ module XNAS
     output = "apache_rw.conf"
     output = open(output,'a+')
     output.write("
+    # #{p_id} - #{p_dir}
     <Directory #{prefix}/profesor/#{p_dir}/>
       # Inherits Dav On
-      Include extra/ldap-auth-rw.conf
       AllowOverride AuthConfig Limit
       Options +Indexes
       Satisfy ALL
-      Require ldap-user #{p_id}
+      Require ldap-group cn=#{p_id},ou=unix,ou=groups,dc=xnas,dc=local
       <LimitExcept GET OPTIONS PROPFIND>
         Satisfy ALL
-        Require ldap-user #{p_id}
+        Require ldap-group cn=#{p_id},ou=unix,ou=groups,dc=xnas,dc=local
       </LimitExcept>
     </Directory>
     ")
@@ -738,7 +746,7 @@ module XNAS
     target = "#{target}/#{m_id}" unless (m_id.nil? or m_id.empty?)
     target = "#{target}/#{g_id}" unless (g_id.nil? or g_id.empty?)
     output.write("mkdir -vp #{target}\n")
-    FileUtils.mkdir_p "#{target}"
+    #FileUtils.mkdir_p "#{target}"
     puts "mkdir -vp #{target}" if (VERBOSE)
   end
 
