@@ -7,208 +7,265 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta charset="utf-8">
   <title>JSON</title>
+  <link type="text/css" rel="stylesheet" href="/assets/jqwidgets/styles/jqx.base.css" />
   <style type="text/css">
-  </style>
-
-
-  <!-- SlidesJS Required (if responsive): Sets the page width to the device width. -->
-  <meta name="viewport" content="width=device-width">
-  <!-- End SlidesJS Required -->
-
-  <!-- CSS for slidesjs.com example -->
-  <link rel="stylesheet" href="/assets/styles/example.css">
-  <link rel="stylesheet" href="/assets/styles/font-awesome.min.css">
-  <!-- End CSS for slidesjs.com example -->
-
-  <!-- SlidesJS Optional: If you'd like to use this design -->
-  <style>
-    body {
-      -webkit-font-smoothing: antialiased;
-      font: normal 15px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
-      color: #232525;
-      padding-top:70px;
+    .content
+    {
+/*        background: #999;
+        border: 1px solid #777;
+        float:right;
+        width: 90%;
+        height: 10%;
+        color: #fff;
+        -moz-border-radius: 13px;
+        -webkit-border-radius: 13px;
+        border-radius: 13px;
+        padding: 13px;*/
     }
-
-    #slides,
-    #slides2,
-    #slides3 {
-      display: none;
-      margin-bottom:50px;
+    .section
+    {
+/*        padding: 15px;*/
     }
-
-    .slidesjs-navigation {
-      margin-top:3px;
+    .section img
+    {
+/*        margin-top: 13px;*/
     }
-
-    .slidesjs-previous {
-      margin-right: 5px;
-      float: left;
+    .jqxwidget
+    {
     }
-
-    .slidesjs-next {
-      margin-right: 5px;
-      float: left;
-    }
-
-    .slidesjs-pagination {
-      margin: 6px 0 0;
-      float: right;
-      list-style: none;
-    }
-
-    .slidesjs-pagination li {
-      float: left;
-      margin: 0 1px;
-    }
-
-    .slidesjs-pagination li a {
-      display: block;
-      width: 13px;
-      height: 0;
-      padding-top: 13px;
-      background-image: url(/assets/img/pagination.png);
-      background-position: 0 0;
-      float: left;
-      overflow: hidden;
-    }
-
-    .slidesjs-pagination li a.active,
-    .slidesjs-pagination li a:hover.active {
-      background-position: 0 -13px
-    }
-
-    .slidesjs-pagination li a:hover {
-      background-position: 0 -26px
-    }
-
-    a:link,
-    a:visited {
-      color: #333
-    }
-
-    a:hover,
-    a:active {
-      color: #9e2020
-    }
-
-    .navbar {
-      overflow: hidden
+    .float
+    {
+      float:left;
     }
   </style>
-  <!-- End SlidesJS Optional-->
-
-  <!-- SlidesJS Required: These styles are required if you'd like a responsive slideshow -->
-  <style>
-    #slides {
-      display: none
-    }
-
-    .container {
-      margin: 0 auto
-    }
-
-    /* For tablets & smart phones */
-    @media (max-width: 767px) {
-      body {
-        padding-left: 20px;
-        padding-right: 20px;
-      }
-      .container {
-        width: auto
-      }
-    }
-
-    /* For smartphones */
-    @media (max-width: 480px) {
-      .container {
-        width: auto
-      }
-    }
-
-    /* For smaller displays like laptops */
-    @media (min-width: 768px) and (max-width: 979px) {
-      .container {
-        width: 724px
-      }
-    }
-
-    /* For larger displays */
-    @media (min-width: 1200px) {
-      .container {
-        width: 1170px
-      }
-    }
-  </style>
-  <!-- SlidesJS Required: -->
-</head>
-<body>
-  <!-- SlidesJS Required: Start Slides -->
-  <!-- The container is used to define the width of the slideshow -->
-  <div class="container">
-    <div id="slides">
-      <img src="assets/img/001.png" alt="" />
-      <img src="assets/img/002.png" alt="" />
-      <img src="assets/img/003.png" alt="" />
-      <img src="assets/img/004.png" alt="" />
-      <img src="assets/img/005.png" alt="" />
-      <img src="assets/img/006.png" alt="" />
-      <img src="assets/img/007.png" alt="" />
-      <img src="assets/img/008.png" alt="" />
-      <img src="assets/img/009.png" alt="" />
-      <img src="assets/img/010.png" alt="" />
-      <img src="assets/img/011.png" alt="" />
-      <img src="assets/img/012.png" alt="" />
-      <img src="assets/img/013.png" alt="" />
-      <img src="assets/img/014.png" alt="" />
-      <img src="assets/img/015.png" alt="" />
-      <img src="assets/img/016.png" alt="" />
-      <img src="assets/img/017.png" alt="" />
-      <img src="assets/img/018.png" alt="" />
-      <a href="#" class="slidesjs-previous slidesjs-navigation"><i class="icon-chevron-left"></i></a>
-      <a href="#" class="slidesjs-next slidesjs-navigation"><i class="icon-chevron-right"></i></a>
-    </div>
-  </div>
-  <!-- End SlidesJS Required: Start Slides -->
-
-  <!-- SlidesJS Required: Link to jQuery -->
   <script type="text/javascript" src="/assets/scripts/jquery-1.10.2.min.js"></script>
-  <!-- End SlidesJS Required -->
+  <!-- https://github.com/kemayo/maphilight -->
+  <script type="text/javascript" src="/jquery.maphilight.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxcore.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxtabs.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxdockpanel.js"></script>
+  <script type="text/javascript" src="/assets/jqwidgets/jqxbuttons.js"></script>
+  <script type="text/javascript">
+(
+ function()
+ {
+//  $("html").append('\n<!--\n\t= ^ . ^ =\t\n-->\n');
+ }
+)();
+</script>
+<script type="text/javascript">
+$(document).ready
+(
+  function()
+  {
+    
+    // help text
+    var help = new Array
+    (
+      "Click on the <code>Start</code> orb.",
+      "Click on the <code>Control Panel</code>code> item.",
+      "Select the <code>Network and Internet<code/> category.",
+      "Select the <code>Internet Options</code> entry.",
+      "Go to the <code>Connections</code> tab and click the <code>LAN Settigs</code> button.",
+      "Uncheck the <code>Automatically detect settings</code> box and click OK to close the dialog.",
+      "Click <code>OK</code> to close the <code>Internet Properties</code> window.",
+      "Close the <code>Control Panel</code> window.",
+      "Launch <code>Internet Explorer</code> and open xNAS installer URL <a href='https://xnas.local/install.cmd'>https://xnas.local/install.cmd</a> a warning about the website's security certificate is displayed, click on <code>Continue to this website</code> link to proceed.",
+      "The <code>File Download</code> dialog is displayed, click the <code>Save</code> button.",
+      "A <code>Save As</code> window is shown, select <code>Desktop</code> on the left pane, then type <code>\"install.cmd\"</code> on the filename input and select <code>All Files</code> in the filetype combobox, finally click <code>Save</code>.",
+      "When the download is complete check the box and click <code>Close</code> to dismiss the dialog.",
+      "Close the <code>Internet Explorer</code> window to run the installer.",
+      "A <code>install.cmd</code> script is downloaded in the <code>Desktop</code> right click it and select <code>Run as Administrator</code>.",
+      "The <code>User Account Control</code> box will ask for confirmation, press <code>Yes</code> to continue.",
+      "A <code>CMD</code> window will appear while the installer is working.",
+      "When the installer is done, the <code>CMD</code> window will be dismissed and a <code>xNAS</code> shortcut will be placed in the desktop.",
+      "",
+      "",
+      "",
+      "",
+      ""
+    );
+    
+    /* create jqxTabs html layout */
+    
+    // http://stackoverflow.com/questions/2998784/how-to-output-integers-with-leading-zeros-in-javascript
+    Number.prototype.pad = function(size) {
+      var s = String(this);
+      while (s.length < (size || 2)) {s = "0" + s;}
+      return s;
+    }
+    
+    var slides = 22 ;
+    var html = "" ;
+    html += "<ul>";
+    for (var i=1 ; i<=slides ; i++)
+    {
+      html = html + "            <li>" + i + "</li>" ;
+    }
+    html += "</ul>";
+    for (var i=1 ; i<=slides ; i++)
+    {
+      var I = i.pad(3);
+      html +=       "          <div id='section" + I + "' class='section'>";
+      html = html + "            <img id='slide" + I + "' usemap='#map" + I + "' alt='" + I + "' src='assets/img/" + I + ".png' style='width: 800px; height: 600px;' />";
+      html +=       "            <map name='map" + I + "'>";
+      html +=       "             <area alt='area" + I + "' shape='rect' coords='" + (0+10*i) + "," + (530-10*i) + "," + (60+10*i) + "," + (600-10*i) + "' href='#' data-maphilight='{&quot;alwaysOn&quot;:true}'>";
+      html +=       "            </map>";
+      html +=       "          </div>";
+    }
+/*  
+  <div class="section">
+    <img alt="001" src="assets/img/001.png" width="800" height="600" border="0" usemap="#Map" />
+    <map name="Map" id="Map">
+      <area id="shadowed" shape="rect" coords="0,530,60,600" href="#" alt="Shadow for some" 
+        data-maphilight='{&quot;alwaysOn&quot;:true}'>
+      <area shape="poly" coords="97,24,57,41,97,57,266,57,304,41,265,25" href="http:/google.com" target="_blank" alt="hotspot 1" title="Google" name="test_area" id="test_area" />
+      <area shape="poly" coords="54,46,23,72,91,103,94,63" href="http://yahoo.com" target="_blank" alt="hotspot 2" title="Yahoo"/>
+      <area shape="poly" coords="101,64,98,105,266,105,262,65" href="http://example.com" target="_blank" alt="hotspot 3" title="Example"/>
+      <area shape="poly" coords="274,102,270,64,308,49,338,77" href="http://dynamicdrive.com" target="_blank" alt="hotspot 4" title="Dynamic Drive" />
+      <area shape="poly" coords="31,88,88,117,151,283" href="http://wordpress.org" target="_blank" alt="hotspot 5" title="WordPress" />
+      <area shape="poly" coords="101,113,261,113,185,327,101,113" href="http://jQuery.com" target="_blank" alt="hotspot 6" title="jQuery" />
+      <area shape="poly" coords="275,110,335,87,226,275" href="http://adobe.com" target="_blank" alt="hotspot 7" title="Adobe" />
 
-  <!-- SlidesJS Required: Link to jquery.slides.js -->
-  <script src="/assets/scripts/jquery.slides.min.js"></script>
-  <!-- End SlidesJS Required -->
-
-  <!-- SlidesJS Required: Initialize SlidesJS with a jQuery doc ready -->
-  <script>
-    $(function() {
-      $('#slides').slidesjs({
-        width: 940,
-        height: 528,
-        navigation: false
-      });
-
-      /*
-        To have multiple slideshows on the same page
-        they just need to have separate IDs
-      */
-      $('#slides2').slidesjs({
-        width: 940,
-        height: 528,
-        navigation: false,
-        start: 3,
-        play: {
-          auto: true
+      <area id="arrow" shape="poly" style="display:none;" coords="211,3,121,67,112,53,95,103,146,108,136,92,229,25" href="#" alt="arrow">
+      <area id="star" shape="poly" coords="78,83,70,100,52,104,64,115,61,133,78,124,94,133,91,116,104,102,87,101,79,88" href="#" alt="star" class="group" data-maphilight="{&quot;strokeColor&quot;:&quot;0000ff&quot;,&quot;strokeWidth&quot;:5,&quot;fillColor&quot;:&quot;ff0000&quot;,&quot;fillOpacity&quot;:0.6}">
+      <area id="square1" shape="poly" coords="248,126,222,150,202,122,233,105,239,118,249,125,250,128" href="#" alt="a square" data-maphilight="{&quot;alwaysOn&quot;:true,&quot;stroke&quot;:false}">
+      <area id="square2" shape="poly" coords="151,249,175,225,182,222,167,193,136,221,153,250" href="#" alt="another square" class="group" data-maphilight="{&quot;groupBy&quot;:&quot;.group&quot;}">
+      <area id="shadowed" shape="rect" coords="0,550,100,600" href="#" alt="Shadow for some" data-maphilight="{&quot;fillColor&quot;:&quot;00ff00&quot;,&quot;shadow&quot;:true,&quot;shadowBackground&quot;:&quot;ffffff&quot;,&quot;alwaysOn&quot;:true}">
+*/    
+    $('#jqxTabs').html(html);
+    
+    /* Initialize jqxDockPanel */
+    
+    // Create jqxDockPanel
+    $("#jqxDockPanel").jqxDockPanel({ height: 635 });
+    $("#jqxDockPanel").css({ width: '100%', height: '100%' });
+    //$("#jqxDockPanel div").css('color', '#fff');
+    // Apply custom layout depending on the user's choice.
+    //$("#jqxDockPanel > div > div").css({ width: '100px' });
+    $('#prevPanel').attr('dock', 'left');
+    $('#prevPanel').css({ width: '33px' });
+    $('#slidesPanel').attr('dock', 'left');
+    $('#slidesPanel').css({ width: '800px' });
+    $('#nextPanel').attr('dock', 'left');
+    $('#nextPanel').css({ width: '33px' });
+    $('#captionPanel').attr('dock', 'left');
+    $('#captionPanel').css({ width: '100px' });
+    $('#jqxDockPanel').jqxDockPanel('render');
+    
+    /* Initialize jqxTabs */
+    
+    $('#jqxTabs').jqxTabs
+    (
+      {
+        //height:                 '90%',
+        //width:                  '90%',
+        width:                    '800px',
+        animationType:            'fade',
+        contentTransitionDuration: 75,
+        position:                 'bottom',
+        selectionTracker:          true
+      }
+    );
+    $("#prevButton").jqxButton({ template: "info" });
+    $("#nextButton").jqxButton({ template: "primary" });
+    $('#prevButton').css({ width: '100%', height: '100%' });
+    $('#nextButton').css({ width: '100%', height: '100%' });
+    
+    /* event listeners */
+    
+    /*var seconds = 5;
+    (
+      function slideShow()
+      {
+        setTimeout
+        (
+          function ()
+          {
+              if ($('#jqxTabs').jqxTabs('selectedItem') < slides)
+              {
+                  $('#jqxTabs').jqxTabs('next');
+              }
+              else
+              {
+                  $('#jqxTabs').jqxTabs('first');
+              }
+              slideShow();
+          }, seconds * 1000
+        )
+      }
+    ()
+    );*/
+      $('#captionPanel').html(help[0]);
+  
+      $("#jqxTabs").on
+      (
+        'selected',
+        function()
+        {
+          $('#captionPanel').html(help[$('#jqxTabs').jqxTabs('selectedItem')]);
+          $('#jqxTabs').jqxTabs('focus');
         }
-      });
+      );
 
-      $('#slides3').slidesjs({
-        width: 940,
-        height: 528,
-        navigation: false
-      });
-    });
-  </script>
-  <!-- End SlidesJS Required -->
+      $("#prevButton").on
+      (
+        'click',
+        function()
+        {
+          if ($('#jqxTabs').jqxTabs('selectedItem') >= 0)
+          {
+            $('#jqxTabs').jqxTabs('select',$('#jqxTabs').jqxTabs('selectedItem')-1);
+          }
+        }
+      );
+      $("#nextButton").on
+      (
+        'click',
+        function()
+        {
+          if ($('#jqxTabs').jqxTabs('selectedItem') < slides)
+          {
+            $('#jqxTabs').jqxTabs('next');
+          }
+        }
+      );
+      $('#jqxTabs').jqxTabs('focus');
+  }
+);
+</script>
+<script type="text/javascript">
+$(function() {
+$('img[usemap]').maphilight();
+});
+</script>
+</head>
+<body class='default'>
+  <div id='jqxWidget' class="jqxwidget">
+    <div id='jqxDockPanel'>
+      <div id='prevPanel'>
+        <button id="prevButton">&lt;</button>
+      </div>
+      <div id='slidesPanel'>
+        <div id='jqxTabs' class="jqxtabs float">
+<!--
+          <ul>
+            <li>1</li>
+            ...
+          </ul>
+          <div class="section">
+              <img alt="001" src="assets/img/001.png" />
+          </div>
+          ...
+-->
+        </div> <!-- jqxtabs -->
+      </div>
+      <div id='nextPanel'>
+        <button id="nextButton">&gt;</button>
+      </div>
+      <div id='captionPanel'>
+      </div>
+    </div> <!-- jqxdockpanel -->
+  </div> <!-- jqxwidget -->
 </body>
 </html>
-
